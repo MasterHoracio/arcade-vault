@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Static prototype reference, not app code — CDN-React globals (window.X),
+    // not migrated by the spec.
+    "references/templates/**",
   ]),
 ]);
 
