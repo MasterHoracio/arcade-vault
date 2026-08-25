@@ -16,3 +16,12 @@ npx skills@latest add Klerith/fernando-skills
 ```
 
 ## Hola mundo
+
+## Commands
+
+```bash
+npm run dev      # start dev server (also regenerates the AGENTS.md block above)
+npm run build
+npm run start
+npm run lint
+```

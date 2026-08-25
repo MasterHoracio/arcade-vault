@@ -10,15 +10,6 @@ Arcade Vault — a platform for playing games online and competing for high scor
 
 Stack: Next.js 16.3.2 (App Router), React 19.2.8, TypeScript, Tailwind CSS 4, ESLint 9 (flat config).
 
-## Commands
-
-```bash
-npm run dev      # start dev server (also regenerates the AGENTS.md block above)
-npm run build
-npm run start
-npm run lint
-```
-
 No test runner is configured yet.
 
 ## Next.js 16 breaking changes — read before writing code
@@ -30,3 +21,6 @@ One breaking change already visible in this repo: `app/layout.tsx` types its pro
 ## Spec-driven workflow
 
 The README indicates this project follows spec-driven design via `/spec` and `/spec-impl`, using the skill pack from `Klerith/fernando-skills` (installed via `npx skills@latest add Klerith/fernando-skills`). No `/spec` command or skill files are present in this checkout yet — if asked to add a feature, check whether that skill pack has since been installed before improvising a spec format.
+
+## Skills
+Usa siempre /frontend-design para diseñar la interfaz de usuario.
