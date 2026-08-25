@@ -14,7 +14,10 @@ export default function Nav() {
   const [user, setUser] = useState<AvUser | null>(null);
 
   useEffect(() => {
+    // Sync from localStorage (external system) on every navigation, since
+    // sign-in/out can happen on other pages without remounting Nav.
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(JSON.parse(localStorage.getItem("av_user") || "null"));
     } catch {
       setUser(null);
