@@ -1,6 +1,6 @@
 # 02 · Home y reubicación de Biblioteca
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 01
 **Fecha:** 2026-08-26
 
