@@ -4,16 +4,28 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import { GAMES } from "@/lib/games";
+import AsteroidsCanvas from "@/components/AsteroidsCanvas";
+import type { AsteroidsHudState } from "@/lib/games/asteroids/engine";
 
-export default function GamePlayerPage({ params }: PageProps<"/juegos/[id]/jugar">) {
+export default function GamePlayerPage({
+  params,
+}: PageProps<"/juegos/[id]/jugar">) {
   const { id } = use(params);
   const router = useRouter();
   const game = GAMES.find((g) => g.id === id);
   if (!game) notFound();
 
+  const isRocas = game.id === "rocas";
+
   const [score, setScore] = useState(0);
   const [lives] = useState(3);
   const level = Math.floor(score / 2500) + 1;
+  const [hud, setHud] = useState<AsteroidsHudState>({
+    score: 0,
+    lives: 3,
+    level: 1,
+    tripleShotRemaining: 0,
+  });
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
   const [name, setName] = useState("INVITADO");
@@ -30,10 +42,13 @@ export default function GamePlayerPage({ params }: PageProps<"/juegos/[id]/jugar
   }, []);
 
   useEffect(() => {
-    if (over || paused) return;
-    const t = setInterval(() => setScore((s) => s + Math.floor(10 + Math.random() * 90)), 220);
+    if (isRocas || over || paused) return;
+    const t = setInterval(
+      () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
+      220,
+    );
     return () => clearInterval(t);
-  }, [over, paused]);
+  }, [isRocas, over, paused]);
 
   const endGame = () => setOver(true);
   const restart = () => {
@@ -66,15 +81,21 @@ export default function GamePlayerPage({ params }: PageProps<"/juegos/[id]/jugar
           </div>
           <div className="hud-stat">
             <div className="l">Puntuación</div>
-            <div className="v">{score.toLocaleString("es-ES")}</div>
+            <div className="v">
+              {(isRocas ? hud.score : score).toLocaleString("es-ES")}
+            </div>
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
-            <div className="v">{"♥ ".repeat(lives).trim() || "—"}</div>
+            <div className="v">
+              {"♥ ".repeat(isRocas ? hud.lives : lives).trim() || "—"}
+            </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, "0")}</div>
+            <div className="v">
+              {String(isRocas ? hud.level : level).padStart(2, "0")}
+            </div>
           </div>
         </div>
         <div className="hud-actions">
@@ -84,7 +105,10 @@ export default function GamePlayerPage({ params }: PageProps<"/juegos/[id]/jugar
           <button className="btn magenta" onClick={endGame}>
             FIN
           </button>
-          <button className="btn ghost" onClick={() => router.push(`/juegos/${game.id}`)}>
+          <button
+            className="btn ghost"
+            onClick={() => router.push(`/juegos/${game.id}`)}
+          >
             SALIR
           </button>
         </div>
@@ -92,20 +116,42 @@ export default function GamePlayerPage({ params }: PageProps<"/juegos/[id]/jugar
 
       <div className="crt">
         <div className="crt-screen">
-          <div className="game-arena">
-            <div className="grid-floor"></div>
-            <div className="enemy e1"></div>
-            <div className="enemy e2"></div>
-            <div className="enemy e3"></div>
-            <div className="player-ship"></div>
-          </div>
+          {isRocas ? (
+            <AsteroidsCanvas
+              paused={paused}
+              onStateChange={setHud}
+              onGameOver={(finalScore) => {
+                setScore(finalScore);
+                endGame();
+              }}
+            />
+          ) : (
+            <div className="game-arena">
+              <div className="grid-floor"></div>
+              <div className="enemy e1"></div>
+              <div className="enemy e2"></div>
+              <div className="enemy e3"></div>
+              <div className="player-ship"></div>
+            </div>
+          )}
           {paused && (
-            <div className="crt-content" style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}>
+            <div
+              className="crt-content"
+              style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
+            >
               <div>
                 <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
                   EN PAUSA
                 </div>
-                <div className="mono" style={{ fontSize: 11, color: "var(--ink-dim)", marginTop: 10, letterSpacing: "0.16em" }}>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--ink-dim)",
+                    marginTop: 10,
+                    letterSpacing: "0.16em",
+                  }}
+                >
                   PULSA REANUDAR PARA CONTINUAR
                 </div>
               </div>
@@ -114,9 +160,7 @@ export default function GamePlayerPage({ params }: PageProps<"/juegos/[id]/jugar
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>
-            {game.title} · CRT-83 · 60 HZ
-          </span>
+          <span>{game.title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>
@@ -131,7 +175,9 @@ export default function GamePlayerPage({ params }: PageProps<"/juegos/[id]/jugar
               <div className="input-row">
                 <input
                   value={name}
-                  onChange={(e) => setName(e.target.value.toUpperCase().slice(0, 10))}
+                  onChange={(e) =>
+                    setName(e.target.value.toUpperCase().slice(0, 10))
+                  }
                   placeholder="TUS INICIALES"
                 />
                 <button className="btn yellow" onClick={handleSaveScore}>
