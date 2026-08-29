@@ -15,7 +15,7 @@ export default function GamePlayerPage({
   const game = GAMES.find((g) => g.id === id);
   if (!game) notFound();
 
-  const isRocas = game.id === "rocas";
+  const isAsteroides = game.id === "asteroides";
 
   const [score, setScore] = useState(0);
   const [lives] = useState(3);
@@ -42,13 +42,13 @@ export default function GamePlayerPage({
   }, []);
 
   useEffect(() => {
-    if (isRocas || over || paused) return;
+    if (isAsteroides || over || paused) return;
     const t = setInterval(
       () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
       220,
     );
     return () => clearInterval(t);
-  }, [isRocas, over, paused]);
+  }, [isAsteroides, over, paused]);
 
   const endGame = () => setOver(true);
   const restart = () => {
@@ -82,19 +82,19 @@ export default function GamePlayerPage({
           <div className="hud-stat">
             <div className="l">Puntuación</div>
             <div className="v">
-              {(isRocas ? hud.score : score).toLocaleString("es-ES")}
+              {(isAsteroides ? hud.score : score).toLocaleString("es-ES")}
             </div>
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
             <div className="v">
-              {"♥ ".repeat(isRocas ? hud.lives : lives).trim() || "—"}
+              {"♥ ".repeat(isAsteroides ? hud.lives : lives).trim() || "—"}
             </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
             <div className="v">
-              {String(isRocas ? hud.level : level).padStart(2, "0")}
+              {String(isAsteroides ? hud.level : level).padStart(2, "0")}
             </div>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function GamePlayerPage({
 
       <div className="crt">
         <div className="crt-screen">
-          {isRocas ? (
+          {isAsteroides ? (
             <AsteroidsCanvas
               paused={paused}
               onStateChange={setHud}
@@ -191,7 +191,10 @@ export default function GamePlayerPage({
               <button className="btn" onClick={restart}>
                 JUGAR DE NUEVO
               </button>
-              <button className="btn magenta" onClick={() => router.push("/")}>
+              <button
+                className="btn magenta"
+                onClick={() => router.push("/juegos")}
+              >
                 VOLVER AL VAULT
               </button>
             </div>
