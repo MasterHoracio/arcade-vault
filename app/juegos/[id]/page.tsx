@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { formatPlays } from "@/lib/games";
 import { createClient } from "@/lib/supabase/server";
 import { getGame, getTopScores } from "@/lib/supabase/queries";
+import PlayNowButton from "@/components/PlayNowButton";
 
 export default async function GameDetailPage({
   params,
@@ -60,9 +61,7 @@ export default async function GameDetailPage({
             </div>
           </div>
           <div className="detail-actions">
-            <Link href={`/juegos/${game.id}/jugar`} className="btn xl pulse">
-              ▶ JUGAR AHORA
-            </Link>
+            <PlayNowButton gameId={game.id} />
             <Link href="/juegos" className="btn ghost lg">
               VOLVER AL VAULT
             </Link>

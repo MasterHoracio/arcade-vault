@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/games";
-import { createClient } from "@/lib/supabase/client";
-import { insertScore } from "@/lib/supabase/queries";
+import { registerPlay, saveScore } from "@/app/actions/games";
 import AsteroidsCanvas from "@/components/AsteroidsCanvas";
 import type { AsteroidsHudState } from "@/lib/games/asteroids/engine";
 
@@ -47,6 +46,9 @@ export default function PlayerClient({ game }: { game: Game }) {
 
   const endGame = () => setOver(true);
   const restart = () => {
+    registerPlay(game.id).catch(() => {
+      // no-op: no bloquear el reinicio si falla el conteo de partidas
+    });
     setScore(0);
     setPaused(false);
     setOver(false);
@@ -55,7 +57,7 @@ export default function PlayerClient({ game }: { game: Game }) {
 
   const handleSaveScore = async () => {
     try {
-      await insertScore(createClient(), {
+      await saveScore({
         gameId: game.id,
         playerName: name,
         score,
