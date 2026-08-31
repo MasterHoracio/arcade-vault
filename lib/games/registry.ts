@@ -1,3 +1,4 @@
+import ArkanoidCanvas from "@/components/ArkanoidCanvas";
 import AsteroidsCanvas from "@/components/AsteroidsCanvas";
 import TetrisCanvas from "@/components/TetrisCanvas";
 
@@ -16,6 +17,7 @@ export interface GameRegistryEntry {
 }
 
 export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
+  arkanoid: { Canvas: ArkanoidCanvas },
   asteroides: { Canvas: AsteroidsCanvas },
   tetris: { Canvas: TetrisCanvas },
 };
