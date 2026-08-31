@@ -22,6 +22,7 @@ export default function PlayerClient({ game }: { game: Game }) {
   const [over, setOver] = useState(false);
   const [name, setName] = useState("INVITADO");
   const [saved, setSaved] = useState(false);
+  const [round, setRound] = useState(0);
 
   useEffect(() => {
     try {
@@ -51,6 +52,7 @@ export default function PlayerClient({ game }: { game: Game }) {
     setPaused(false);
     setOver(false);
     setSaved(false);
+    setRound((r) => r + 1);
   };
 
   const handleSaveScore = async () => {
@@ -119,6 +121,7 @@ export default function PlayerClient({ game }: { game: Game }) {
         <div className="crt-screen">
           {entry ? (
             <entry.Canvas
+              key={round}
               paused={paused}
               onStateChange={setHud}
               onGameOver={(finalScore) => {

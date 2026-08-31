@@ -487,9 +487,10 @@ export function createArkanoidGame(
   let lastTime: number | null = null;
   let rafId: number | null = null;
   let paused = false;
+  let stopped = true;
 
   function loop(ts: number) {
-    const dt = lastTime === null ? 0 : (ts - lastTime) / 1000;
+    const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, 0.05);
     lastTime = ts;
     update(dt);
     draw();
@@ -502,16 +503,21 @@ export function createArkanoidGame(
     initGame();
     lastTime = null;
     paused = false;
+    stopped = false;
     if (ssLoaded) {
       rafId = requestAnimationFrame(loop);
     } else {
       loadSpritesheet(() => {
-        if (!paused) rafId = requestAnimationFrame(loop);
+        // La carga es asíncrona: si stop() ya se llamó (p. ej. por el
+        // doble-montaje de React Strict Mode en desarrollo), esta instancia
+        // "zombie" no debe arrancar su propio loop.
+        if (!stopped && !paused) rafId = requestAnimationFrame(loop);
       });
     }
   }
 
   function stop() {
+    stopped = true;
     if (rafId !== null) cancelAnimationFrame(rafId);
     rafId = null;
     window.removeEventListener("keydown", onKeyDown);
@@ -519,7 +525,7 @@ export function createArkanoidGame(
   }
 
   function setPaused(p: boolean) {
-    if (p === paused) return;
+    if (p === paused || stopped) return;
     paused = p;
     if (paused) {
       if (rafId !== null) cancelAnimationFrame(rafId);
