@@ -917,54 +917,6 @@ a {
   filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.4));
 }
 
-.cover-tetris {
-  background: var(--bg);
-}
-.cover-tetris::after {
-  content: "";
-  position: absolute;
-  inset: 10% 20% 0 20%;
-  background:
-    linear-gradient(var(--magenta), var(--magenta)) 0 0/16.66% 20%,
-    linear-gradient(var(--cyan), var(--cyan)) 16.66% 0/16.66% 20%,
-    linear-gradient(var(--yellow), var(--yellow)) 33.33% 0/16.66% 20%,
-    linear-gradient(var(--green), var(--green)) 50% 0/16.66% 20%,
-    linear-gradient(var(--cyan), var(--cyan)) 66.66% 0/16.66% 20%,
-    linear-gradient(var(--magenta), var(--magenta)) 83.33% 0/16.66% 20%,
-    linear-gradient(var(--yellow), var(--yellow)) 0 20%/16.66% 20%,
-    linear-gradient(var(--green), var(--green)) 33.33% 20%/16.66% 20%,
-    linear-gradient(var(--cyan), var(--cyan)) 50% 20%/16.66% 20%,
-    linear-gradient(var(--magenta), var(--magenta)) 83.33% 20%/16.66% 20%,
-    linear-gradient(var(--green), var(--green)) 0 40%/16.66% 20%,
-    linear-gradient(var(--yellow), var(--yellow)) 16.66% 40%/16.66% 20%,
-    linear-gradient(var(--magenta), var(--magenta)) 50% 40%/16.66% 20%,
-    linear-gradient(var(--cyan), var(--cyan)) 66.66% 40%/16.66% 20%,
-    linear-gradient(var(--green), var(--green)) 83.33% 40%/16.66% 20%,
-    linear-gradient(var(--yellow), var(--yellow)) 0 60%/16.66% 20%,
-    linear-gradient(var(--cyan), var(--cyan)) 16.66% 60%/16.66% 20%,
-    linear-gradient(var(--green), var(--green)) 33.33% 60%/16.66% 20%,
-    linear-gradient(var(--magenta), var(--magenta)) 66.66% 60%/16.66% 20%,
-    linear-gradient(var(--yellow), var(--yellow)) 83.33% 60%/16.66% 20%,
-    linear-gradient(var(--cyan), var(--cyan)) 0 80%/16.66% 20%,
-    linear-gradient(var(--green), var(--green)) 16.66% 80%/16.66% 20%,
-    linear-gradient(var(--magenta), var(--magenta)) 33.33% 80%/16.66% 20%,
-    linear-gradient(var(--yellow), var(--yellow)) 50% 80%/16.66% 20%,
-    linear-gradient(var(--cyan), var(--cyan)) 66.66% 80%/16.66% 20%;
-  background-repeat: no-repeat;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5) inset;
-  filter: drop-shadow(0 0 6px rgba(255, 0, 110, 0.35));
-}
-.cover-tetris::before {
-  content: "";
-  position: absolute;
-  left: 40%;
-  top: 8%;
-  width: 13.33%;
-  height: 12%;
-  background: var(--yellow);
-  box-shadow: 0 0 12px 2px rgba(245, 255, 0, 0.7);
-}
-
 /* ===== detail screen ===== */
 .av-detail {
   display: grid;
