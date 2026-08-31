@@ -1,6 +1,6 @@
 # 04 · Integración de Supabase (cliente y conexión)
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 01
 **Fecha:** 2026-08-28
 

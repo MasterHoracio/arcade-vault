@@ -4,21 +4,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/games";
 import { registerPlay, saveScore } from "@/app/actions/games";
-import AsteroidsCanvas from "@/components/AsteroidsCanvas";
-import type { AsteroidsHudState } from "@/lib/games/asteroids/engine";
+import { GAME_REGISTRY, type HudFields } from "@/lib/games/registry";
 
 export default function PlayerClient({ game }: { game: Game }) {
   const router = useRouter();
-  const isAsteroides = game.id === "asteroides";
+  const entry = GAME_REGISTRY[game.id];
 
   const [score, setScore] = useState(0);
   const [lives] = useState(3);
   const level = Math.floor(score / 2500) + 1;
-  const [hud, setHud] = useState<AsteroidsHudState>({
+  const [hud, setHud] = useState<HudFields>({
     score: 0,
     lives: 3,
     level: 1,
-    tripleShotRemaining: 0,
   });
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
@@ -36,13 +34,13 @@ export default function PlayerClient({ game }: { game: Game }) {
   }, []);
 
   useEffect(() => {
-    if (isAsteroides || over || paused) return;
+    if (entry || over || paused) return;
     const t = setInterval(
       () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
       220,
     );
     return () => clearInterval(t);
-  }, [isAsteroides, over, paused]);
+  }, [entry, over, paused]);
 
   const endGame = () => setOver(true);
   const restart = () => {
@@ -81,19 +79,23 @@ export default function PlayerClient({ game }: { game: Game }) {
           <div className="hud-stat">
             <div className="l">Puntuación</div>
             <div className="v">
-              {(isAsteroides ? hud.score : score).toLocaleString("es-ES")}
+              {(entry ? hud.score : score).toLocaleString("es-ES")}
             </div>
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
             <div className="v">
-              {"♥ ".repeat(isAsteroides ? hud.lives : lives).trim() || "—"}
+              {entry
+                ? hud.lives !== undefined
+                  ? "♥ ".repeat(hud.lives).trim() || "—"
+                  : "—"
+                : "♥ ".repeat(lives).trim() || "—"}
             </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
             <div className="v">
-              {String(isAsteroides ? hud.level : level).padStart(2, "0")}
+              {String(entry ? hud.level : level).padStart(2, "0")}
             </div>
           </div>
         </div>
@@ -115,8 +117,8 @@ export default function PlayerClient({ game }: { game: Game }) {
 
       <div className="crt">
         <div className="crt-screen">
-          {isAsteroides ? (
-            <AsteroidsCanvas
+          {entry ? (
+            <entry.Canvas
               paused={paused}
               onStateChange={setHud}
               onGameOver={(finalScore) => {
