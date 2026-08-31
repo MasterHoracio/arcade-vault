@@ -1,6 +1,6 @@
 # 05 · Juego real — Asteroides ("ASTEROIDES")
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 01
 **Fecha:** 2026-08-28
 

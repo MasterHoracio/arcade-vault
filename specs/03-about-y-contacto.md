@@ -1,6 +1,6 @@
 # 03 · Acerca de y formulario de contacto
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 02
 **Fecha:** 2026-08-26
 
