@@ -667,27 +667,41 @@ a {
   inset: 0;
 }
 
-.cover-bricks {
+.cover-arkanoid {
   background:
     repeating-linear-gradient(
-        90deg,
-        #ff006e 0 32px,
-        #ffae00 32px 64px,
-        #00f5ff 64px 96px,
-        #00ff88 96px 128px
+        180deg,
+        var(--magenta) 0 20px,
+        var(--yellow) 20px 40px,
+        var(--cyan) 40px 60px,
+        var(--green) 60px 80px
       )
-      0 0/100% 32px,
-    #15151f;
+      0 0/100% 80px,
+    var(--ink);
 }
-.cover-bricks::after {
+.cover-arkanoid::after {
   content: "";
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
-    0deg,
+    90deg,
     transparent 0 32px,
-    rgba(0, 0, 0, 0.4) 32px 33px
+    rgba(0, 0, 0, 0.35) 32px 33px
   );
+}
+.cover-arkanoid::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  width: 36px;
+  height: 8px;
+  background: var(--ink);
+  border-radius: 4px;
+  transform: translateX(-50%);
+  box-shadow:
+    0 -10px 0 -4px var(--magenta),
+    0 0 10px 2px var(--magenta);
 }
 
 .cover-tetro {
