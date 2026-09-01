@@ -61,3 +61,7 @@ Skills disponibles:
 ## Skills
 
 Usa siempre /frontend-design para diseñar la interfaz de usuario.
+
+## Agentes
+
+`game-planner` (`.claude/agents/game-planner.md`) decide qué juego nuevo agregar: analiza el catálogo (Supabase + `references/implemented-games.md`) contra criterios de balance, factibilidad y encaje con el leaderboard, y lleva memoria de lo ya sugerido/descartado en `references/game-suggestions-todo.md` para no repetirse entre corridas. Corre antes de `/spec-juego`, que ya recibe el juego decidido.
