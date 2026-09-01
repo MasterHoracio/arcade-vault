@@ -1,5 +1,6 @@
 import ArkanoidCanvas from "@/components/ArkanoidCanvas";
 import AsteroidsCanvas from "@/components/AsteroidsCanvas";
+import SerpentinaCanvas from "@/components/SerpentinaCanvas";
 import TetrisCanvas from "@/components/TetrisCanvas";
 
 export interface HudFields {
@@ -19,5 +20,6 @@ export interface GameRegistryEntry {
 export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   arkanoid: { Canvas: ArkanoidCanvas },
   asteroides: { Canvas: AsteroidsCanvas },
+  serpentina: { Canvas: SerpentinaCanvas },
   tetris: { Canvas: TetrisCanvas },
 };
