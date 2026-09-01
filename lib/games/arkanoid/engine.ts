@@ -165,8 +165,8 @@ export function createArkanoidGame(
   const BLOCK_H = 24;
   const BLOCKS_ORIGIN_X = (canvas.width - BLOCK_COLS * BLOCK_W) / 2;
   const BLOCKS_ORIGIN_Y = 80;
-  const BASE_BALL_VX = 200;
-  const BASE_BALL_VY = -300;
+  const BASE_BALL_VX = 170;
+  const BASE_BALL_VY = -255;
 
   // ── Spritesheet loading ───────────────────────────────────────────────
   let ssImg: HTMLCanvasElement | null = null;
@@ -262,7 +262,7 @@ export function createArkanoidGame(
   }
 
   const paddle: Paddle = { x: 0, y: 560, w: 81, h: 14 };
-  const ball: Ball = { x: 0, y: 0, w: 16, h: 16, vx: 200, vy: -300 };
+  const ball: Ball = { x: 0, y: 0, w: 16, h: 16, vx: 0, vy: 0 };
 
   let blocks: Block[] = [];
   let explosions: Explosion[] = [];
@@ -271,11 +271,21 @@ export function createArkanoidGame(
   let gameState: "playing" | "gameover" | "win" = "playing";
   let currentLevel = 1;
   let gameOverFired = false;
+  // La bola queda pegada a la paleta al iniciar y tras perder una vida;
+  // se lanza al pulsar Espacio (no forma parte del game.js original).
+  let ballAttached = true;
 
-  const keys: Record<string, boolean> = { ArrowLeft: false, ArrowRight: false };
+  const keys: Record<string, boolean> = {
+    ArrowLeft: false,
+    ArrowRight: false,
+    " ": false,
+  };
 
   function onKeyDown(e: KeyboardEvent) {
-    if (e.key in keys) keys[e.key] = true;
+    if (e.key in keys) {
+      keys[e.key] = true;
+      e.preventDefault();
+    }
   }
   function onKeyUp(e: KeyboardEvent) {
     if (e.key in keys) keys[e.key] = false;
@@ -285,12 +295,23 @@ export function createArkanoidGame(
     paddle.x = (canvas.width - paddle.w) / 2;
   }
 
-  function initBall() {
-    const speed = LEVELS[currentLevel - 1].speed;
+  function attachBallToPaddle() {
     ball.x = paddle.x + (paddle.w - ball.w) / 2;
     ball.y = paddle.y - ball.h;
+    ball.vx = 0;
+    ball.vy = 0;
+    ballAttached = true;
+  }
+
+  function launchBall() {
+    const speed = LEVELS[currentLevel - 1].speed;
     ball.vx = BASE_BALL_VX * speed;
     ball.vy = BASE_BALL_VY * speed;
+    ballAttached = false;
+  }
+
+  function initBall() {
+    attachBallToPaddle();
   }
 
   function loadLevel(n: number) {
@@ -305,10 +326,7 @@ export function createArkanoidGame(
       alive: true,
     }));
     explosions = [];
-    ball.x = paddle.x + (paddle.w - ball.w) / 2;
-    ball.y = paddle.y - ball.h;
-    ball.vx = BASE_BALL_VX * level.speed;
-    ball.vy = BASE_BALL_VY * level.speed;
+    attachBallToPaddle();
   }
 
   function collideAABB(block: Block) {
@@ -343,56 +361,63 @@ export function createArkanoidGame(
         paddle.x + PADDLE_SPEED * dt,
       );
 
-    // Ball movement
-    ball.x += ball.vx * dt;
-    ball.y += ball.vy * dt;
-
-    // Wall bounces (left, right, top)
-    if (ball.x <= 0) {
-      ball.x = 0;
-      ball.vx = Math.abs(ball.vx);
-    }
-    if (ball.x + ball.w >= canvas.width) {
-      ball.x = canvas.width - ball.w;
-      ball.vx = -Math.abs(ball.vx);
-    }
-    if (ball.y <= 0) {
-      ball.y = 0;
-      ball.vy = Math.abs(ball.vy);
-    }
-
-    // Paddle bounce
-    if (
-      ball.vy > 0 &&
-      ball.x + ball.w > paddle.x &&
-      ball.x < paddle.x + paddle.w &&
-      ball.y + ball.h >= paddle.y &&
-      ball.y + ball.h <= paddle.y + paddle.h + 8
-    ) {
+    if (ballAttached) {
+      // La bola sigue a la paleta hasta que se lanza con Espacio.
+      ball.x = paddle.x + (paddle.w - ball.w) / 2;
       ball.y = paddle.y - ball.h;
-      ball.vy = -Math.abs(ball.vy);
-    }
+      if (keys[" "]) launchBall();
+    } else {
+      // Ball movement
+      ball.x += ball.vx * dt;
+      ball.y += ball.vy * dt;
 
-    // Block collisions
-    for (const block of blocks) {
-      if (!block.alive) continue;
-      if (collideAABB(block)) {
-        block.alive = false;
-        explosions.push({
-          x: block.x,
-          y: block.y,
-          w: block.w,
-          h: block.h,
-          color: block.color,
-          elapsed: 0,
-        });
-        score += 10;
-        ball.vy = -ball.vy;
-        if (blocks.every((b) => !b.alive)) {
-          if (currentLevel < 5) loadLevel(currentLevel + 1);
-          else gameState = "win";
+      // Wall bounces (left, right, top)
+      if (ball.x <= 0) {
+        ball.x = 0;
+        ball.vx = Math.abs(ball.vx);
+      }
+      if (ball.x + ball.w >= canvas.width) {
+        ball.x = canvas.width - ball.w;
+        ball.vx = -Math.abs(ball.vx);
+      }
+      if (ball.y <= 0) {
+        ball.y = 0;
+        ball.vy = Math.abs(ball.vy);
+      }
+
+      // Paddle bounce
+      if (
+        ball.vy > 0 &&
+        ball.x + ball.w > paddle.x &&
+        ball.x < paddle.x + paddle.w &&
+        ball.y + ball.h >= paddle.y &&
+        ball.y + ball.h <= paddle.y + paddle.h + 8
+      ) {
+        ball.y = paddle.y - ball.h;
+        ball.vy = -Math.abs(ball.vy);
+      }
+
+      // Block collisions
+      for (const block of blocks) {
+        if (!block.alive) continue;
+        if (collideAABB(block)) {
+          block.alive = false;
+          explosions.push({
+            x: block.x,
+            y: block.y,
+            w: block.w,
+            h: block.h,
+            color: block.color,
+            elapsed: 0,
+          });
+          score += 10;
+          ball.vy = -ball.vy;
+          if (blocks.every((b) => !b.alive)) {
+            if (currentLevel < 5) loadLevel(currentLevel + 1);
+            else gameState = "win";
+          }
+          break; // one block per frame
         }
-        break; // one block per frame
       }
     }
 
@@ -401,7 +426,7 @@ export function createArkanoidGame(
     explosions = explosions.filter((exp) => exp.elapsed < EXPLOSION_DURATION);
 
     // Ball lost
-    if (ball.y > canvas.height) {
+    if (!ballAttached && ball.y > canvas.height) {
       lives--;
       if (lives <= 0) {
         lives = 0;
