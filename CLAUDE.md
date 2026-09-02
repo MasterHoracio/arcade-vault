@@ -65,3 +65,5 @@ Usa siempre /frontend-design para diseñar la interfaz de usuario.
 ## Agentes
 
 `game-planner` (`.claude/agents/game-planner.md`) decide qué juego nuevo agregar: analiza el catálogo (Supabase + `references/implemented-games.md`) contra criterios de balance, factibilidad y encaje con el leaderboard, y lleva memoria de lo ya sugerido/descartado en `references/game-suggestions-todo.md` para no repetirse entre corridas. Corre antes de `/spec-juego`, que ya recibe el juego decidido.
+
+`game-jam` (`.claude/agents/game-jam.md`) recibe un tema libre (ej. "espacio profundo") y explora 3 variantes de un mismo juego inspirado en ese tema, cada una como spec completa en `specs/game-jam/<game-id>/`. No decide qué juego agregar por balance de catálogo (eso es `game-planner`) ni escribe código ni migra Supabase; solo produce las 3 specs para revisión. Elegida una variante, se numera en `specs/` vía `/spec-juego <game-id>`.
