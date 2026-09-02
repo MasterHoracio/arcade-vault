@@ -1,5 +1,7 @@
 // ===== lib/games/asteroids/engine.ts — puerto TS de references/started-games/02-asteroids/game.js =====
 
+import type { SkinId } from "@/lib/games/skins";
+
 export interface AsteroidsHudState {
   score: number;
   lives: number;
@@ -15,10 +17,13 @@ export interface AsteroidsCallbacks {
 export function createAsteroidsGame(
   canvas: HTMLCanvasElement,
   callbacks: AsteroidsCallbacks,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  options?: { skin?: SkinId },
 ): {
   start: () => void;
   stop: () => void;
   setPaused: (paused: boolean) => void;
+  setSkin: (skin: SkinId) => void;
 } {
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
   const W = 800;
@@ -589,5 +594,11 @@ export function createAsteroidsGame(
     }
   }
 
-  return { start, stop, setPaused };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function setSkin(_skin: SkinId) {
+    // TODO(skin-designer): solo "clasico" implementado — el look actual del
+    // juego es "clasico" por definición. "neon"/"retro" pendientes.
+  }
+
+  return { start, stop, setPaused, setSkin };
 }

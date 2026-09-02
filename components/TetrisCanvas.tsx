@@ -5,15 +5,18 @@ import {
   createTetrisGame,
   type TetrisHudState,
 } from "@/lib/games/tetris/engine";
+import type { SkinId } from "@/lib/games/skins";
 
 interface TetrisCanvasProps {
   paused: boolean;
+  skin: SkinId;
   onStateChange: (state: TetrisHudState) => void;
   onGameOver: (finalScore: number) => void;
 }
 
 export default function TetrisCanvas({
   paused,
+  skin,
   onStateChange,
   onGameOver,
 }: TetrisCanvasProps) {
@@ -26,10 +29,12 @@ export default function TetrisCanvas({
     const nextCanvas = nextCanvasRef.current;
     if (!canvas || !nextCanvas) return;
 
-    const game = createTetrisGame(canvas, nextCanvas, {
-      onStateChange,
-      onGameOver,
-    });
+    const game = createTetrisGame(
+      canvas,
+      nextCanvas,
+      { onStateChange, onGameOver },
+      { skin },
+    );
     gameRef.current = game;
     game.start();
 
@@ -43,6 +48,10 @@ export default function TetrisCanvas({
   useEffect(() => {
     gameRef.current?.setPaused(paused);
   }, [paused]);
+
+  useEffect(() => {
+    gameRef.current?.setSkin(skin);
+  }, [skin]);
 
   return (
     <div

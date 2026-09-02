@@ -5,11 +5,19 @@ import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/games";
 import { registerPlay, saveScore } from "@/app/actions/games";
 import { GAME_REGISTRY, type HudFields } from "@/lib/games/registry";
+import {
+  DEFAULT_SKIN,
+  SKIN_LABELS,
+  readSkin,
+  writeSkin,
+  type SkinId,
+} from "@/lib/games/skins";
 
 export default function PlayerClient({ game }: { game: Game }) {
   const router = useRouter();
   const entry = GAME_REGISTRY[game.id];
 
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
   const [score, setScore] = useState(0);
   const [lives] = useState(3);
   const level = Math.floor(score / 2500) + 1;
@@ -32,7 +40,14 @@ export default function PlayerClient({ game }: { game: Game }) {
     } catch {
       // no-op: keep default "INVITADO"
     }
+
+    setSkin(readSkin());
   }, []);
+
+  const handleSkinChange = (next: SkinId) => {
+    setSkin(next);
+    writeSkin(next);
+  };
 
   useEffect(() => {
     if (entry || over || paused) return;
@@ -100,6 +115,23 @@ export default function PlayerClient({ game }: { game: Game }) {
               {String(entry ? hud.level : level).padStart(2, "0")}
             </div>
           </div>
+          {entry && entry.skins.length > 1 && (
+            <div className="hud-stat">
+              <div className="l">Skin</div>
+              <select
+                className="skin-select"
+                value={skin}
+                onChange={(e) => handleSkinChange(e.target.value as SkinId)}
+                aria-label="Skin del juego"
+              >
+                {entry.skins.map((s) => (
+                  <option key={s} value={s}>
+                    {SKIN_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <div className="hud-actions">
           <button className="btn yellow" onClick={() => setPaused((p) => !p)}>
@@ -117,12 +149,13 @@ export default function PlayerClient({ game }: { game: Game }) {
         </div>
       </div>
 
-      <div className="crt">
+      <div className="crt" data-skin={skin}>
         <div className="crt-screen">
           {entry ? (
             <entry.Canvas
               key={round}
               paused={paused}
+              skin={skin}
               onStateChange={setHud}
               onGameOver={(finalScore) => {
                 setScore(finalScore);

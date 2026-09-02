@@ -1,5 +1,7 @@
 // ===== lib/games/arkanoid/engine.ts — puerto TS de references/started-games/04-arkanoid/game.js =====
 
+import type { SkinId } from "@/lib/games/skins";
+
 export interface ArkanoidHudState {
   score: number;
   lives: number;
@@ -150,10 +152,13 @@ const LEVELS: LevelDef[] = (() => {
 export function createArkanoidGame(
   canvas: HTMLCanvasElement,
   callbacks: ArkanoidCallbacks,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  options?: { skin?: SkinId },
 ): {
   start: () => void;
   stop: () => void;
   setPaused: (paused: boolean) => void;
+  setSkin: (skin: SkinId) => void;
 } {
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
@@ -561,5 +566,11 @@ export function createArkanoidGame(
     }
   }
 
-  return { start, stop, setPaused };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function setSkin(_skin: SkinId) {
+    // TODO(skin-designer): solo "clasico" implementado — el look actual del
+    // juego es "clasico" por definición. "neon"/"retro" pendientes.
+  }
+
+  return { start, stop, setPaused, setSkin };
 }

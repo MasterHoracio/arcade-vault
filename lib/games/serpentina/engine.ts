@@ -1,6 +1,7 @@
 // ===== lib/games/serpentina/engine.ts — motor de Snake diseñado desde cero =====
 
 import { SPRITE_ATLAS } from "./sprites";
+import type { SkinId } from "@/lib/games/skins";
 
 export interface SerpentinaHudState {
   score: number;
@@ -16,10 +17,13 @@ export interface SerpentinaCallbacks {
 export function createSerpentinaGame(
   canvas: HTMLCanvasElement,
   callbacks: SerpentinaCallbacks,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  options?: { skin?: SkinId },
 ): {
   start: () => void;
   stop: () => void;
   setPaused: (paused: boolean) => void;
+  setSkin: (skin: SkinId) => void;
 } {
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
@@ -275,5 +279,11 @@ export function createSerpentinaGame(
     }
   }
 
-  return { start, stop, setPaused };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function setSkin(_skin: SkinId) {
+    // TODO(skin-designer): solo "clasico" implementado — el look actual del
+    // juego es "clasico" por definición. "neon"/"retro" pendientes.
+  }
+
+  return { start, stop, setPaused, setSkin };
 }

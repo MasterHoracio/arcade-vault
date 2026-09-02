@@ -2,6 +2,7 @@ import ArkanoidCanvas from "@/components/ArkanoidCanvas";
 import AsteroidsCanvas from "@/components/AsteroidsCanvas";
 import SerpentinaCanvas from "@/components/SerpentinaCanvas";
 import TetrisCanvas from "@/components/TetrisCanvas";
+import type { SkinId } from "@/lib/games/skins";
 
 export interface HudFields {
   score: number;
@@ -12,14 +13,18 @@ export interface HudFields {
 export interface GameRegistryEntry {
   Canvas: React.ComponentType<{
     paused: boolean;
+    skin: SkinId;
     onStateChange: (state: HudFields) => void;
     onGameOver: (finalScore: number) => void;
   }>;
+  // Skins que el engine implementa de verdad hoy — "clasico" siempre está
+  // disponible porque es el look original del juego, sin cambios.
+  skins: SkinId[];
 }
 
 export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
-  arkanoid: { Canvas: ArkanoidCanvas },
-  asteroides: { Canvas: AsteroidsCanvas },
-  serpentina: { Canvas: SerpentinaCanvas },
-  tetris: { Canvas: TetrisCanvas },
+  arkanoid: { Canvas: ArkanoidCanvas, skins: ["clasico"] },
+  asteroides: { Canvas: AsteroidsCanvas, skins: ["clasico"] },
+  serpentina: { Canvas: SerpentinaCanvas, skins: ["clasico"] },
+  tetris: { Canvas: TetrisCanvas, skins: ["clasico", "neon", "retro"] },
 };

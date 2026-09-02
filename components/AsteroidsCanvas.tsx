@@ -5,15 +5,18 @@ import {
   createAsteroidsGame,
   type AsteroidsHudState,
 } from "@/lib/games/asteroids/engine";
+import type { SkinId } from "@/lib/games/skins";
 
 interface AsteroidsCanvasProps {
   paused: boolean;
+  skin: SkinId;
   onStateChange: (state: AsteroidsHudState) => void;
   onGameOver: (finalScore: number) => void;
 }
 
 export default function AsteroidsCanvas({
   paused,
+  skin,
   onStateChange,
   onGameOver,
 }: AsteroidsCanvasProps) {
@@ -24,7 +27,13 @@ export default function AsteroidsCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const game = createAsteroidsGame(canvas, { onStateChange, onGameOver });
+    const game = createAsteroidsGame(
+      canvas,
+      { onStateChange, onGameOver },
+      {
+        skin,
+      },
+    );
     gameRef.current = game;
     game.start();
 
@@ -38,6 +47,10 @@ export default function AsteroidsCanvas({
   useEffect(() => {
     gameRef.current?.setPaused(paused);
   }, [paused]);
+
+  useEffect(() => {
+    gameRef.current?.setSkin(skin);
+  }, [skin]);
 
   return (
     <canvas
