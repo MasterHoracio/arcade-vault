@@ -1,6 +1,6 @@
 # 08 · Juego real — Arkanoid ("ARKANOID")
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 04, SPEC 06, SPEC 07
 > **Fecha:** 2026-08-31
 > **Objetivo:** Portar el juego de referencia `references/started-games/04-arkanoid/game.js` a TypeScript e integrarlo como motor real en `/juegos/arkanoid/jugar`, reemplazando la fila y el juego simulado `bloque-buster` (mismo `id` renombrado a `arkanoid`), con sprites reales, cover propio y su entrada en `lib/games/registry.ts` (ya existente).

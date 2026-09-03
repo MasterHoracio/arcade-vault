@@ -1,6 +1,6 @@
 # 10 · Controles táctiles para dispositivos móviles
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05, SPEC 07, SPEC 08, SPEC 09
 > **Fecha:** 2026-09-03
 > **Objetivo:** Agregar un d-pad y botones de acción táctiles al Reproductor, visibles por debajo de los 768px de ancho, que permitan jugar arkanoid, asteroides, serpentina y tetris por completo en pantalla táctil sin tocar el código interno de los 4 engines.

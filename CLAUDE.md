@@ -53,6 +53,15 @@ fondo oscuro, y la técnica de re-tinte de sprites viven en
 `prefers-color-scheme`; "verse bien en modo oscuro" se verifica con las
 reglas de contraste de ese documento, no a ojo.
 
+### Responsive móvil
+
+Los 3 breakpoints canónicos (`480px`/`768px`/`1024px`, convención
+`max-width`), los 4 puntos de falla recurrentes del layout de este repo
+(estilos inline con px fijos, filas flex sin wrap, padding/radius fijo,
+grids sin colapso) y las reglas verificables de pantalla chica viven en
+`references/mobile-contract.md`. Es solo web responsive de navegador — sin
+PWA, manifest ni wrapper nativo.
+
 `references/started-games/` guarda las versiones originales en JS vanilla de los juegos que se portan; `references/templates/` los mockups JSX/HTML de los que salió la UI. Es material de consulta — no se compila.
 
 ## Next.js 16 breaking changes — read before writing code
@@ -81,3 +90,5 @@ Usa siempre /frontend-design para diseñar la interfaz de usuario.
 `game-jam` (`.claude/agents/game-jam.md`) recibe un tema libre (ej. "espacio profundo") y explora 3 variantes de un mismo juego inspirado en ese tema, cada una como spec completa en `specs/game-jam/<game-id>/`. No decide qué juego agregar por balance de catálogo (eso es `game-planner`) ni escribe código ni migra Supabase; solo produce las 3 specs para revisión. Elegida una variante, se numera en `specs/` vía `/spec-juego <game-id>`.
 
 `skin-designer` (`.claude/agents/skin-designer.md`) audita e implementa los 3 skins (`clasico`, `neon`, `retro`) del juego que le indiques — uno por corrida, nunca decide cuál por su cuenta. Lleva memoria de qué juegos ya tienen los 3 skins en `references/game-with-themes.md`. No agrega juegos nuevos ni explora temas de concepto (eso es `game-planner`/`game-jam`); solo re-tematiza un juego ya implementado.
+
+`mobile-porter` (`.claude/agents/mobile-porter.md`) audita e implementa el responsive móvil de la zona (ruta o componente compartido) que le indiques — una por corrida, nunca decide cuál por su cuenta. Sigue el contrato de breakpoints y reglas verificables de `references/mobile-contract.md`, y lleva memoria de qué zonas ya están portadas en `references/mobile-audit.md`. No toca ningún `engine.ts`, no agrega PWA/manifest/service worker, y no cambia skins ni mecánica de ningún juego.

@@ -1,6 +1,6 @@
 # 09 · Juego real — Serpentina ("SERPENTINA")
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 04, SPEC 06, SPEC 07
 > **Fecha:** 2026-09-01
 > **Objetivo:** Diseñar e implementar desde cero (sin `game.js` de referencia) el motor real de Snake en `lib/games/serpentina/engine.ts`, integrado en `/juegos/serpentina/jugar` sobre la fila ya existente `serpentina` en Supabase, usando los sprites de fruta de `references/game-assets/snake-assets/`.

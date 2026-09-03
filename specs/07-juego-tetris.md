@@ -1,6 +1,6 @@
 # 07 · Juego real — Tetris ("TETRIS")
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 01, SPEC 04, SPEC 06
 **Fecha:** 2026-08-31
 
