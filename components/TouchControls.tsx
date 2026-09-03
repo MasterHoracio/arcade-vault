@@ -131,7 +131,12 @@ export default function TouchControls({ config }: TouchControlsProps) {
             key={slot}
             slot={slot}
             label={label}
-            content={glyph}
+            content={
+              <>
+                <span className="touch-action-ring" aria-hidden="true" />
+                <span className="touch-action-letter">{glyph}</span>
+              </>
+            }
             config={config}
             className={`touch-action-btn touch-action-${slot}`}
           />
