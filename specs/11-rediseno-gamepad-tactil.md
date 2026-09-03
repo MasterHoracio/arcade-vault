@@ -1,6 +1,6 @@
 # SPEC 11 — Rediseño visual del gamepad táctil (estética MK-II)
 
-> **Estado:** Draft
+> **Estado:** Aprobado
 > **Depende de:** SPEC 10
 > **Fecha:** 2026-09-03
 > **Objetivo:** Retematizar visualmente el `TouchControls` ya implementado en SPEC 10 (carcasa, d-pad en cruz con flechas SVG y hub central, botones A/B circulares con glow) siguiendo el mockup de referencia en `references/gamepad-assets/`, sin cambiar comportamiento, breakpoint, layout general ni el mapeo de teclas por juego.
