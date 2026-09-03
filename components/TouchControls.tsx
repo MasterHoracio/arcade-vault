@@ -7,17 +7,40 @@ export interface TouchControlsProps {
   config: TouchControlsConfig;
 }
 
-const DPAD_SLOTS: { slot: TouchSlot; label: string; glyph: string }[] = [
-  { slot: "up", label: "Arriba", glyph: "▲" },
-  { slot: "left", label: "Izquierda", glyph: "◀" },
-  { slot: "right", label: "Derecha", glyph: "▶" },
-  { slot: "down", label: "Abajo", glyph: "▼" },
+const DPAD_ARROW_PATHS: Record<"up" | "left" | "right" | "down", string> = {
+  up: "M12 4 L20 16 L4 16 Z",
+  right: "M8 4 L20 12 L8 20 Z",
+  down: "M4 8 L20 8 L12 20 Z",
+  left: "M16 4 L16 20 L4 12 Z",
+};
+
+const DPAD_SLOTS: {
+  slot: TouchSlot;
+  label: string;
+  direction: keyof typeof DPAD_ARROW_PATHS;
+}[] = [
+  { slot: "up", label: "Arriba", direction: "up" },
+  { slot: "left", label: "Izquierda", direction: "left" },
+  { slot: "right", label: "Derecha", direction: "right" },
+  { slot: "down", label: "Abajo", direction: "down" },
 ];
 
 const ACTION_SLOTS: { slot: TouchSlot; label: string; glyph: string }[] = [
   { slot: "a", label: "Acción A", glyph: "A" },
   { slot: "b", label: "Acción B", glyph: "B" },
 ];
+
+function DpadArrow({
+  direction,
+}: {
+  direction: keyof typeof DPAD_ARROW_PATHS;
+}) {
+  return (
+    <svg className="touch-dpad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+      <path d={DPAD_ARROW_PATHS[direction]} fill="currentColor" />
+    </svg>
+  );
+}
 
 function dispatchKey(type: "keydown" | "keyup", code: string, key: string) {
   // document, no window: tetris escucha en document; el resto en window, y
@@ -28,13 +51,13 @@ function dispatchKey(type: "keydown" | "keyup", code: string, key: string) {
 function TouchKey({
   slot,
   label,
-  glyph,
+  content,
   config,
   className,
 }: {
   slot: TouchSlot;
   label: string;
-  glyph: string;
+  content: React.ReactNode;
   config: TouchControlsConfig;
   className: string;
 }) {
@@ -50,7 +73,7 @@ function TouchKey({
         aria-disabled="true"
         disabled
       >
-        {glyph}
+        {content}
       </button>
     );
   }
@@ -79,7 +102,7 @@ function TouchKey({
       onPointerCancel={release}
       onPointerLeave={release}
     >
-      {glyph}
+      {content}
     </button>
   );
 }
@@ -88,16 +111,19 @@ export default function TouchControls({ config }: TouchControlsProps) {
   return (
     <div className="touch-controls">
       <div className="touch-dpad">
-        {DPAD_SLOTS.map(({ slot, label, glyph }) => (
+        {DPAD_SLOTS.map(({ slot, label, direction }) => (
           <TouchKey
             key={slot}
             slot={slot}
             label={label}
-            glyph={glyph}
+            content={<DpadArrow direction={direction} />}
             config={config}
             className={`touch-dpad-${slot}`}
           />
         ))}
+        <div className="touch-dpad-hub" aria-hidden="true">
+          <span className="touch-dpad-hub-gem" />
+        </div>
       </div>
       <div className="touch-actions">
         {ACTION_SLOTS.map(({ slot, label, glyph }) => (
@@ -105,7 +131,7 @@ export default function TouchControls({ config }: TouchControlsProps) {
             key={slot}
             slot={slot}
             label={label}
-            glyph={glyph}
+            content={glyph}
             config={config}
             className={`touch-action-btn touch-action-${slot}`}
           />
