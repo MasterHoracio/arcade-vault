@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/games";
 import { registerPlay, saveScore } from "@/app/actions/games";
 import { GAME_REGISTRY, type HudFields } from "@/lib/games/registry";
+import TouchControls from "@/components/TouchControls";
 import {
   DEFAULT_SKIN,
   SKIN_LABELS,
@@ -201,6 +202,7 @@ export default function PlayerClient({ game }: { game: Game }) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+      {entry && <TouchControls config={entry.touchControls} />}
 
       {over && (
         <div className="modal-bd">

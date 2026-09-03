@@ -1238,6 +1238,115 @@ a {
   box-shadow: 0 0 6px var(--green);
 }
 
+.touch-controls {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.touch-dpad {
+  display: grid;
+  grid-template-areas:
+    ".    up   ."
+    "left .    right"
+    ".    down .";
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(3, 44px);
+  gap: 4px;
+}
+.touch-dpad-up {
+  grid-area: up;
+}
+.touch-dpad-down {
+  grid-area: down;
+}
+.touch-dpad-left {
+  grid-area: left;
+}
+.touch-dpad-right {
+  grid-area: right;
+}
+.touch-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.touch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  font-family: var(--pixel);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--cyan);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  clip-path: polygon(
+    6px 0,
+    100% 0,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    0 100%,
+    0 6px
+  );
+}
+.touch-btn:active {
+  color: var(--cyan);
+  box-shadow:
+    0 0 14px rgba(0, 245, 255, 0.55),
+    inset 0 0 8px rgba(0, 245, 255, 0.35);
+}
+.touch-action-btn {
+  min-width: 56px;
+  min-height: 56px;
+  font-size: 14px;
+}
+.touch-action-a {
+  border-color: var(--magenta);
+}
+.touch-action-a:active {
+  color: var(--magenta);
+  box-shadow:
+    0 0 14px rgba(255, 0, 110, 0.55),
+    inset 0 0 8px rgba(255, 0, 110, 0.35);
+}
+.touch-action-b {
+  border-color: var(--yellow);
+}
+.touch-action-b:active {
+  color: var(--yellow);
+  box-shadow:
+    0 0 14px rgba(245, 255, 0, 0.6),
+    inset 0 0 8px rgba(245, 255, 0, 0.35);
+}
+.touch-btn--off {
+  opacity: 0.28;
+  border-color: var(--ink-faint);
+  color: var(--ink-faint);
+  cursor: default;
+  box-shadow: none;
+}
+.touch-btn--off:active {
+  color: var(--ink-faint);
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .touch-controls {
+    display: flex;
+  }
+}
+
 /* fake in-screen game */
 .game-arena {
   position: absolute;
