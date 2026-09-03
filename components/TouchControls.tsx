@@ -1,61 +1,85 @@
 "use client";
 
 import { useRef } from "react";
-import type { TouchControlsConfig } from "@/lib/games/registry";
+import type { TouchControlsConfig, TouchSlot } from "@/lib/games/registry";
 
 export interface TouchControlsProps {
   config: TouchControlsConfig;
 }
 
-interface DpadKey {
-  label: string;
-  code: string;
-  key: string;
-}
+const DPAD_SLOTS: { slot: TouchSlot; label: string; glyph: string }[] = [
+  { slot: "up", label: "Arriba", glyph: "▲" },
+  { slot: "left", label: "Izquierda", glyph: "◀" },
+  { slot: "right", label: "Derecha", glyph: "▶" },
+  { slot: "down", label: "Abajo", glyph: "▼" },
+];
 
-const LEFT: DpadKey = { label: "◀", code: "ArrowLeft", key: "ArrowLeft" };
-const RIGHT: DpadKey = { label: "▶", code: "ArrowRight", key: "ArrowRight" };
-const UP: DpadKey = { label: "▲", code: "ArrowUp", key: "ArrowUp" };
-const DOWN: DpadKey = { label: "▼", code: "ArrowDown", key: "ArrowDown" };
+const ACTION_SLOTS: { slot: TouchSlot; label: string; glyph: string }[] = [
+  { slot: "a", label: "Acción A", glyph: "A" },
+  { slot: "b", label: "Acción B", glyph: "B" },
+];
 
 function dispatchKey(type: "keydown" | "keyup", code: string, key: string) {
-  window.dispatchEvent(new KeyboardEvent(type, { code, key }));
+  // document, no window: tetris escucha en document; el resto en window, y
+  // como KeyboardEvent hace bubble por defecto, les sigue llegando igual.
+  document.dispatchEvent(new KeyboardEvent(type, { code, key, bubbles: true }));
 }
 
 function TouchKey({
-  dpadKey,
+  slot,
+  label,
+  glyph,
+  config,
   className,
 }: {
-  dpadKey: DpadKey;
-  className?: string;
+  slot: TouchSlot;
+  label: string;
+  glyph: string;
+  config: TouchControlsConfig;
+  className: string;
 }) {
+  const binding = config[slot];
   const pointerId = useRef<number | null>(null);
+
+  if (!binding) {
+    return (
+      <button
+        type="button"
+        className={`touch-btn touch-btn--off ${className}`}
+        aria-label={label}
+        aria-disabled="true"
+        disabled
+      >
+        {glyph}
+      </button>
+    );
+  }
 
   const press = (e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
     pointerId.current = e.pointerId;
-    dispatchKey("keydown", dpadKey.code, dpadKey.key);
+    dispatchKey("keydown", binding.code, binding.key);
   };
 
   const release = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (pointerId.current !== e.pointerId) return;
     e.preventDefault();
     pointerId.current = null;
-    dispatchKey("keyup", dpadKey.code, dpadKey.key);
+    dispatchKey("keyup", binding.code, binding.key);
   };
 
   return (
     <button
       type="button"
-      className={`touch-btn ${className ?? ""}`}
+      className={`touch-btn ${className}`}
       style={{ touchAction: "none" }}
-      aria-label={dpadKey.label}
+      aria-label={label}
       onPointerDown={press}
       onPointerUp={release}
       onPointerCancel={release}
       onPointerLeave={release}
     >
-      {dpadKey.label}
+      {glyph}
     </button>
   );
 }
@@ -63,21 +87,28 @@ function TouchKey({
 export default function TouchControls({ config }: TouchControlsProps) {
   return (
     <div className="touch-controls">
-      <div className="touch-dpad" data-dpad={config.dpad}>
-        {config.dpad === "four-way" && (
-          <TouchKey dpadKey={UP} className="touch-dpad-up" />
-        )}
-        <div className="touch-dpad-row">
-          <TouchKey dpadKey={LEFT} className="touch-dpad-left" />
-          <TouchKey dpadKey={RIGHT} className="touch-dpad-right" />
-        </div>
-        {config.dpad === "four-way" && (
-          <TouchKey dpadKey={DOWN} className="touch-dpad-down" />
-        )}
+      <div className="touch-dpad">
+        {DPAD_SLOTS.map(({ slot, label, glyph }) => (
+          <TouchKey
+            key={slot}
+            slot={slot}
+            label={label}
+            glyph={glyph}
+            config={config}
+            className={`touch-dpad-${slot}`}
+          />
+        ))}
       </div>
       <div className="touch-actions">
-        {config.buttons.map((b) => (
-          <TouchKey key={b.code} dpadKey={b} className="touch-action-btn" />
+        {ACTION_SLOTS.map(({ slot, label, glyph }) => (
+          <TouchKey
+            key={slot}
+            slot={slot}
+            label={label}
+            glyph={glyph}
+            config={config}
+            className={`touch-action-btn touch-action-${slot}`}
+          />
         ))}
       </div>
     </div>

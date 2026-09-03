@@ -10,18 +10,17 @@ export interface HudFields {
   level: number;
 }
 
-export type TouchDirection = "left-right" | "four-way";
+export type TouchSlot = "up" | "down" | "left" | "right" | "a" | "b";
 
-export interface TouchButtonConfig {
-  label: string; // texto del botón, ej. "DISPARAR"
+export interface TouchKeyBinding {
   code: string; // KeyboardEvent.code despachado, ej. "Space"
   key: string; // KeyboardEvent.key despachado, ej. " "
 }
 
-export interface TouchControlsConfig {
-  dpad: TouchDirection;
-  buttons: TouchButtonConfig[]; // vacío para serpentina
-}
+// Pad fijo de 6 slots, igual en los 4 juegos. Un slot ausente se renderiza
+// igual (mismo layout siempre) pero deshabilitado: visible, opaco, sin
+// handlers de puntero ni efecto sobre el juego.
+export type TouchControlsConfig = Partial<Record<TouchSlot, TouchKeyBinding>>;
 
 export interface GameRegistryEntry {
   Canvas: React.ComponentType<{
@@ -36,44 +35,31 @@ export interface GameRegistryEntry {
   touchControls: TouchControlsConfig;
 }
 
+const LEFT: TouchKeyBinding = { code: "ArrowLeft", key: "ArrowLeft" };
+const RIGHT: TouchKeyBinding = { code: "ArrowRight", key: "ArrowRight" };
+const UP: TouchKeyBinding = { code: "ArrowUp", key: "ArrowUp" };
+const DOWN: TouchKeyBinding = { code: "ArrowDown", key: "ArrowDown" };
+const SPACE: TouchKeyBinding = { code: "Space", key: " " };
+
 export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
   arkanoid: {
     Canvas: ArkanoidCanvas,
     skins: ["clasico", "neon", "retro"],
-    touchControls: {
-      dpad: "left-right",
-      buttons: [{ label: "LANZAR", code: "Space", key: " " }],
-    },
+    touchControls: { left: LEFT, right: RIGHT, a: SPACE },
   },
   asteroides: {
     Canvas: AsteroidsCanvas,
     skins: ["clasico", "neon", "retro"],
-    touchControls: {
-      dpad: "left-right",
-      buttons: [
-        { label: "AVANZAR", code: "ArrowUp", key: "ArrowUp" },
-        { label: "DISPARAR", code: "Space", key: " " },
-      ],
-    },
+    touchControls: { left: LEFT, right: RIGHT, up: UP, a: SPACE },
   },
   serpentina: {
     Canvas: SerpentinaCanvas,
     skins: ["clasico", "neon", "retro"],
-    touchControls: {
-      dpad: "four-way",
-      buttons: [],
-    },
+    touchControls: { left: LEFT, right: RIGHT, up: UP, down: DOWN },
   },
   tetris: {
     Canvas: TetrisCanvas,
     skins: ["clasico", "neon", "retro"],
-    touchControls: {
-      dpad: "left-right",
-      buttons: [
-        { label: "ROTAR", code: "ArrowUp", key: "ArrowUp" },
-        { label: "BAJAR", code: "ArrowDown", key: "ArrowDown" },
-        { label: "CAER", code: "Space", key: " " },
-      ],
-    },
+    touchControls: { left: LEFT, right: RIGHT, up: UP, down: DOWN, a: SPACE },
   },
 };

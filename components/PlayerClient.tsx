@@ -201,8 +201,8 @@ export default function PlayerClient({ game }: { game: Game }) {
           <span>{game.title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
-        {entry && <TouchControls config={entry.touchControls} />}
       </div>
+      {entry && <TouchControls config={entry.touchControls} />}
 
       {over && (
         <div className="modal-bd">

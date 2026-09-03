@@ -10,15 +10,16 @@
 **Incluye:**
 
 - Un componente nuevo `components/TouchControls.tsx` genérico, parametrizado por una configuración de controles (d-pad de 2 o 4 direcciones + lista de botones de acción), reutilizado por los 4 juegos con datos distintos.
-- Los botones táctiles (d-pad y de acción) despachan `KeyboardEvent`s sintéticos (`window.dispatchEvent(new KeyboardEvent("keydown"/"keyup", { code, key }))`) con el mismo `code`/`key` que ya escucha cada engine — **no se modifica ningún archivo `lib/games/<slug>/engine.ts`**. Se usan Pointer Events (`pointerdown`, `pointerup`, `pointercancel`, `pointerleave`) con `touch-action: none` en cada botón, cada uno rastreando su propio `pointerId`, de forma que mantener presionado un botón mientras se toca otro (ej. `←` + `DISPARAR` en asteroides) funciona correctamente. Se llama `event.preventDefault()` en los handlers para evitar scroll, zoom y el disparo fantasma de eventos de mouse/click sintéticos del navegador.
-- Configuración de controles por juego, agregada a `lib/games/registry.ts` como un nuevo campo `touchControls` en `GameRegistryEntry`:
-  - `arkanoid`: d-pad de 2 direcciones (`ArrowLeft`/`ArrowRight`) + botón `LANZAR` (`Space`).
-  - `asteroides`: d-pad de 2 direcciones para rotar (`ArrowLeft`/`ArrowRight`) + botón `AVANZAR` (`ArrowUp`) + botón `DISPARAR` (`Space`).
-  - `serpentina`: d-pad de 4 direcciones (`ArrowUp`/`ArrowDown`/`ArrowLeft`/`ArrowRight`), sin botones de acción adicionales.
-  - `tetris`: d-pad de 2 direcciones (`ArrowLeft`/`ArrowRight`) + botón `ROTAR` (`ArrowUp`) + botón `BAJAR` (`ArrowDown`, soft drop) + botón `CAER` (`Space`, hard drop).
-- `components/PlayerClient.tsx` renderiza `<TouchControls config={entry.touchControls} />` (solo cuando `entry` existe, es decir, para los 4 juegos reales) en una franja fija debajo de `.crt-screen`, dentro del bloque `.crt` existente, sin modificar el layout del HUD superior ni del modal de fin de partida.
+- Los botones táctiles (d-pad y de acción) despachan `KeyboardEvent`s sintéticos (`document.dispatchEvent(new KeyboardEvent("keydown"/"keyup", { code, key, bubbles: true }))`) con el mismo `code`/`key` que ya escucha cada engine — **no se modifica ningún archivo `lib/games/<slug>/engine.ts`**. Se despacha sobre `document` y no sobre `window` porque `tetris` escucha `keydown` en `document` mientras los otros 3 engines lo hacen en `window`; como el evento hace bubble, despacharlo en `document` llega también a los listeners de `window`, cubriendo ambos casos sin tocar ningún engine. Se usan Pointer Events (`pointerdown`, `pointerup`, `pointercancel`, `pointerleave`) con `touch-action: none` en cada botón, cada uno rastreando su propio `pointerId`, de forma que mantener presionado un botón mientras se toca otro (ej. `←` + `DISPARAR` en asteroides) funciona correctamente. Se llama `event.preventDefault()` en los handlers para evitar scroll, zoom y el disparo fantasma de eventos de mouse/click sintéticos del navegador.
+- Pad **fijo de 6 slots** (`up`/`down`/`left`/`right`/`a`/`b`), idéntico en layout para los 4 juegos — se lee como un control físico de consola. Configuración por juego agregada a `lib/games/registry.ts` como un nuevo campo `touchControls` en `GameRegistryEntry`, que solo declara qué slots están activos y a qué `code`/`key` mapean; un slot ausente en la config se renderiza igual (mismo layout) pero **deshabilitado**: opaco, con el atributo `disabled` y sin efecto sobre el juego.
+  - `arkanoid`: `left`/`right` + `a` (`Space`, lanzar). `up`, `down`, `b` deshabilitados.
+  - `asteroides`: `left`/`right` (rotar) + `up` (avanzar, `ArrowUp`) + `a` (disparar, `Space`). `down`, `b` deshabilitados.
+  - `serpentina`: `up`/`down`/`left`/`right`. `a`, `b` deshabilitados (no tiene botones de acción).
+  - `tetris`: `left`/`right` + `up` (rotar, `ArrowUp`) + `down` (soft drop, `ArrowDown`) + `a` (hard drop, `Space`). `b` deshabilitado.
+  - Los botones de acción usan siempre las etiquetas genéricas `A` y `B` (no texto descriptivo por juego).
+- `components/PlayerClient.tsx` renderiza `<TouchControls config={entry.touchControls} />` (solo cuando `entry` existe, es decir, para los 4 juegos reales) como bloque hermano **fuera** del `<div className="crt">`, inmediatamente después de él, sin modificar el layout del HUD superior ni del modal de fin de partida.
 - Visibilidad: los controles táctiles están ocultos por defecto y se muestran vía `@media (max-width: 768px)` en `app/globals.css` (misma convención `max-width` ya usada en el resto de la hoja de estilos). Por encima de ese ancho, el layout se comporta exactamente igual que hoy.
-- Estilo visual: botones con la estética pixel/arcade ya existente (`--yellow`, `--magenta`, bordes duros, sin bordes redondeados grandes), coherente con `.btn` y `.hud-actions` del Reproductor.
+- Estilo visual: botones con la estética pixel/arcade ya existente, coherente con los tokens del sitio (`--cyan` para el d-pad, `--magenta` para `A`, `--yellow` para `B`), bordes duros y sin bordes redondeados grandes.
 
 **No incluye (para specs futuras):**
 
@@ -34,18 +35,15 @@
 
 ```ts
 // lib/games/registry.ts
-export type TouchDirection = "left-right" | "four-way";
+export type TouchSlot = "up" | "down" | "left" | "right" | "a" | "b";
 
-export interface TouchButtonConfig {
-  label: string; // texto del botón, ej. "DISPARAR"
+export interface TouchKeyBinding {
   code: string; // KeyboardEvent.code despachado, ej. "Space"
   key: string; // KeyboardEvent.key despachado, ej. " "
 }
 
-export interface TouchControlsConfig {
-  dpad: TouchDirection;
-  buttons: TouchButtonConfig[]; // vacío para serpentina
-}
+// Slot ausente = botón renderizado (mismo layout siempre) pero deshabilitado.
+export type TouchControlsConfig = Partial<Record<TouchSlot, TouchKeyBinding>>;
 
 export interface GameRegistryEntry {
   Canvas: React.ComponentType<{/* sin cambios */}>;
@@ -65,21 +63,23 @@ No se introduce persistencia nueva ni cambios a `games`/`scores` en Supabase.
 
 ## Plan de implementación
 
-1. **`lib/games/registry.ts`** — Agregar los tipos `TouchDirection`, `TouchButtonConfig`, `TouchControlsConfig`, el campo `touchControls` a `GameRegistryEntry`, y la configuración concreta de cada uno de los 4 juegos descrita en Alcance. El build sigue pasando (el campo no se usa todavía).
-2. **`components/TouchControls.tsx`** — Client component que recibe `config: TouchControlsConfig` y renderiza el d-pad (2 o 4 flechas según `dpad`) y los botones de `buttons`. Cada botón usa `onPointerDown`/`onPointerUp`/`onPointerCancel`/`onPointerLeave` para despachar `keydown`/`keyup` sintéticos con el `code`/`key` configurados, `style={{ touchAction: "none" }}` y `preventDefault()` en cada handler. Componente puro, sin conocer nada de ningún engine específico. Manual: renderizarlo suelto en cualquier página y confirmar en devtools que aparecen los eventos de teclado al tocar cada botón.
-3. **Estilos en `app/globals.css`** — Clases para `.touch-controls` (franja fija debajo de `.crt-screen`, oculta por defecto, `display: none`), `.touch-dpad`, `.touch-btn`, y la regla `@media (max-width: 768px) { .touch-controls { display: flex; } }`. Reutiliza los tokens de color y bordes ya existentes (`--yellow`, `--magenta`, `--ink`).
-4. **`components/PlayerClient.tsx`** — Renderizar `<TouchControls config={entry.touchControls} />` dentro del bloque `.crt`, debajo de `.crt-screen` y de `.crt-bottom`, solo cuando `entry` existe. Sin cambios al resto del componente.
+1. **`lib/games/registry.ts`** — Agregar los tipos `TouchSlot`, `TouchKeyBinding`, `TouchControlsConfig` (slots fijos, parcial), el campo `touchControls` a `GameRegistryEntry`, y la configuración concreta de cada uno de los 4 juegos descrita en Alcance. El build sigue pasando (el campo no se usa todavía).
+2. **`components/TouchControls.tsx`** — Client component que recibe `config: TouchControlsConfig` y renderiza **siempre** los 6 slots (d-pad en cruz + `A`/`B`), sin condicionales por juego. Un slot con binding usa `onPointerDown`/`onPointerUp`/`onPointerCancel`/`onPointerLeave` para despachar `keydown`/`keyup` sintéticos con el `code`/`key` configurados, `style={{ touchAction: "none" }}` y `preventDefault()` en cada handler; un slot sin binding se renderiza `disabled` (opaco, sin handlers). Componente puro, sin conocer nada de ningún engine específico. Manual: renderizarlo suelto en cualquier página y confirmar en devtools que aparecen los eventos de teclado solo al tocar los botones habilitados.
+3. **Estilos en `app/globals.css`** — Clases para `.touch-controls` (bloque fuera del CRT, oculto por defecto, `display: none`), `.touch-dpad` (grid en cruz), `.touch-btn`, `.touch-btn--off` (estado deshabilitado: opacidad reducida, sin color de acento), y la regla `@media (max-width: 768px) { .touch-controls { display: flex; } }`. Reutiliza los tokens de color y bordes ya existentes (`--cyan`, `--magenta`, `--yellow`, `--ink-faint`).
+4. **`components/PlayerClient.tsx`** — Renderizar `<TouchControls config={entry.touchControls} />` como hermano inmediatamente después del bloque `.crt` (fuera de la ventana del juego), solo cuando `entry` existe. Sin cambios al resto del componente.
 5. **Verificación final** — `npm run lint` y `npm run build` sin errores. Con las devtools en modo responsive (o un dispositivo real) por debajo de 768px de ancho: jugar `/juegos/arkanoid/jugar` moviendo la paleta y lanzando la bola solo con controles táctiles; jugar `/juegos/asteroides/jugar` rotando, avanzando y disparando solo con táctil, incluyendo mantener rotación y disparo a la vez; jugar `/juegos/serpentina/jugar` cambiando de dirección con el d-pad de 4 vías sin invertir 180°; jugar `/juegos/tetris/jugar` moviendo, rotando, soft-drop y hard-drop solo con táctil. Confirmar que por encima de 768px los controles táctiles no aparecen y el teclado sigue funcionando igual que antes en los 4 juegos.
 
 ## Criterios de aceptación
 
-- [ ] `lib/games/registry.ts` exporta `TouchControlsConfig` y cada entrada de `GAME_REGISTRY` (arkanoid, asteroides, serpentina, tetris) tiene un campo `touchControls` con el mapeo descrito en Alcance.
-- [ ] `components/TouchControls.tsx` existe, no importa ni conoce ningún `engine.ts`, y despacha `KeyboardEvent`s sintéticos vía Pointer Events.
+- [ ] `lib/games/registry.ts` exporta `TouchControlsConfig` (slots fijos `up`/`down`/`left`/`right`/`a`/`b`) y cada entrada de `GAME_REGISTRY` (arkanoid, asteroides, serpentina, tetris) tiene un campo `touchControls` con el mapeo descrito en Alcance.
+- [ ] `components/TouchControls.tsx` existe, no importa ni conoce ningún `engine.ts`, renderiza siempre los 6 slots (mismo layout en los 4 juegos) y despacha `KeyboardEvent`s sintéticos vía Pointer Events solo desde los slots con binding.
 - [ ] Ningún archivo `lib/games/<slug>/engine.ts` fue modificado por esta spec.
-- [ ] Por debajo de 768px de ancho de viewport, `/juegos/arkanoid/jugar` muestra un d-pad de 2 direcciones y un botón "LANZAR", y el juego responde a ambos.
-- [ ] Por debajo de 768px, `/juegos/asteroides/jugar` muestra un d-pad de 2 direcciones, un botón "AVANZAR" y un botón "DISPARAR"; mantener presionado rotar y disparar a la vez funciona sin que soltar uno cancele el otro.
-- [ ] Por debajo de 768px, `/juegos/serpentina/jugar` muestra un d-pad de 4 direcciones y la serpiente responde a las 4 direcciones sin poder invertir 180° sobre su propio cuello.
-- [ ] Por debajo de 768px, `/juegos/tetris/jugar` muestra un d-pad de 2 direcciones, "ROTAR", "BAJAR" y "CAER", y cada botón produce el movimiento correspondiente.
+- [ ] El pad táctil se renderiza fuera del bloque `.crt` (debajo de la ventana del juego), no dentro de `.crt-screen`/`.crt-bottom`.
+- [ ] Por debajo de 768px de ancho de viewport, `/juegos/arkanoid/jugar` muestra el pad completo con `left`/`right`/`a` habilitados y `up`/`down`/`b` deshabilitados (opacos, sin efecto); el juego responde a `left`/`right`/`a`.
+- [ ] Por debajo de 768px, `/juegos/asteroides/jugar` muestra `left`/`right`/`up`/`a` habilitados y `down`/`b` deshabilitados; mantener presionado rotar y disparar a la vez funciona sin que soltar uno cancele el otro.
+- [ ] Por debajo de 768px, `/juegos/serpentina/jugar` muestra `up`/`down`/`left`/`right` habilitados y `a`/`b` deshabilitados; la serpiente responde a las 4 direcciones sin poder invertir 180° sobre su propio cuello.
+- [ ] Por debajo de 768px, `/juegos/tetris/jugar` muestra `left`/`right`/`up`/`down`/`a` habilitados y `b` deshabilitado, y cada botón habilitado produce el movimiento correspondiente.
+- [ ] Un botón deshabilitado no dispara ningún `KeyboardEvent` al tocarlo.
 - [ ] Por encima de 768px de ancho, los controles táctiles no son visibles en ninguno de los 4 juegos y el control por teclado sigue funcionando exactamente igual que antes de esta spec.
 - [ ] Tocar un botón táctil no dispara scroll, zoom, selección de texto ni un evento de click fantasma duplicado.
 - [ ] `npm run lint` y `npm run build` terminan sin errores.
