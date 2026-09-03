@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/games";
 import { registerPlay, saveScore } from "@/app/actions/games";
 import { GAME_REGISTRY, type HudFields } from "@/lib/games/registry";
+import TouchControls from "@/components/TouchControls";
 import {
   DEFAULT_SKIN,
   SKIN_LABELS,
@@ -200,6 +201,7 @@ export default function PlayerClient({ game }: { game: Game }) {
           <span>{game.title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
+        {entry && <TouchControls config={entry.touchControls} />}
       </div>
 
       {over && (
