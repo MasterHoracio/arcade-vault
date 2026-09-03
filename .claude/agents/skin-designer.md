@@ -2,7 +2,7 @@
 name: skin-designer
 description: Audita e implementa los 3 skins (clasico, neon, retro) del juego que le indiques, y lleva memoria en references/game-with-themes.md. Úsalo para dar temas a un juego ya implementado.
 tools: Read, Write, Edit, Glob, Grep, Bash(ls:*), Bash(cat:*), Bash(date:*), Bash(npm run lint), Bash(npm run build), mcp__supabase__execute_sql, mcp__supabase__list_tables
-model: opus
+model: sonnet
 ---
 
 # skin-designer — Temas de un juego

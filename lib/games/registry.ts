@@ -23,11 +23,17 @@ export interface GameRegistryEntry {
 }
 
 export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
-  arkanoid: { Canvas: ArkanoidCanvas, skins: ["clasico"] },
+  arkanoid: {
+    Canvas: ArkanoidCanvas,
+    skins: ["clasico", "neon", "retro"],
+  },
   asteroides: {
     Canvas: AsteroidsCanvas,
     skins: ["clasico", "neon", "retro"],
   },
-  serpentina: { Canvas: SerpentinaCanvas, skins: ["clasico"] },
+  serpentina: {
+    Canvas: SerpentinaCanvas,
+    skins: ["clasico", "neon", "retro"],
+  },
   tetris: { Canvas: TetrisCanvas, skins: ["clasico", "neon", "retro"] },
 };
