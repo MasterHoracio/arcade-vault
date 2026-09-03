@@ -1,6 +1,6 @@
 # 08 · Juego real — Arkanoid ("ARKANOID")
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 04, SPEC 06, SPEC 07
 > **Fecha:** 2026-08-31
 > **Objetivo:** Portar el juego de referencia `references/started-games/04-arkanoid/game.js` a TypeScript e integrarlo como motor real en `/juegos/arkanoid/jugar`, reemplazando la fila y el juego simulado `bloque-buster` (mismo `id` renombrado a `arkanoid`), con sprites reales, cover propio y su entrada en `lib/games/registry.ts` (ya existente).
@@ -31,6 +31,10 @@
 - Migración/conservación de puntajes históricos guardados bajo `game_id = "bloque-buster"` en `scores` (si existen) — se decide al implementar según lo que exponga `mcp__supabase__list_tables`/`execute_sql`; si hay filas, esta spec no define su tratamiento y debe resolverse antes de aplicar la migración.
 - Cambios a los demás 6 juegos simulados de la biblioteca (`duelo-pixel`, `gloton`, `invasores`, `ranaria`, `rocas`, `serpentina`). Siguen con la simulación decorativa actual sin ningún cambio.
 - Cálculo dinámico de `best`/`plays` desde `scores` — quedan estáticos como en el resto del catálogo (SPEC 06).
+
+> Nota (2026-09-03): `duelo-pixel`, `gloton`, `invasores`, `ranaria` y
+> `rocas` se eliminaron del catálogo; las menciones a ellos en esta spec
+> son históricas.
 
 ## Modelo de datos
 

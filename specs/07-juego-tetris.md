@@ -1,6 +1,6 @@
 # 07 · Juego real — Tetris ("TETRIS")
 
-**Estado:** Aprobado
+**Estado:** Implementado
 **Depende de:** SPEC 01, SPEC 04, SPEC 06
 **Fecha:** 2026-08-31
 
@@ -30,6 +30,10 @@
 - Cambios al juego `caida` (`PUZZLE`, magenta, `cover-tetro`) ni a los demás 7 juegos simulados de la biblioteca (`bloque-buster`, `duelo-pixel`, `gloton`, `invasores`, `ranaria`, `rocas`, `serpentina`). Siguen con la simulación decorativa actual sin ningún cambio.
 - Guardado automático de puntuación al terminar; sigue el flujo existente (iniciales + "GUARDAR PUNTUACIÓN" en el modal).
 - Cálculo dinámico de `best`/`plays` desde `scores` — quedan estáticos como en el resto del catálogo (SPEC 06).
+
+> Nota (2026-09-03): `duelo-pixel`, `gloton`, `invasores`, `ranaria` y
+> `rocas` se eliminaron del catálogo; las menciones a ellos en esta spec
+> son históricas.
 
 ## Modelo de datos
 

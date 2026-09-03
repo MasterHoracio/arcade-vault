@@ -741,86 +741,6 @@ a {
   filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
 }
 
-.cover-glot {
-  background: radial-gradient(circle at 50% 50%, #1a002a, #0a0a18);
-}
-.cover-glot::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 30% 50%, var(--yellow) 0 38px, transparent 39px),
-    radial-gradient(circle at 30% 50%, transparent 0 0, transparent 28px),
-    radial-gradient(circle at 70% 50%, var(--magenta) 0 6px, transparent 7px),
-    radial-gradient(circle at 82% 50%, var(--cyan) 0 6px, transparent 7px);
-  clip-path: polygon(
-    0 0,
-    30% 0,
-    30% 50%,
-    100% 30%,
-    100% 70%,
-    30% 50%,
-    30% 100%,
-    0 100%
-  );
-  filter: drop-shadow(0 0 8px rgba(245, 255, 0, 0.5));
-}
-.cover-glot::before {
-  content: "•••";
-  position: absolute;
-  left: 55%;
-  top: 47%;
-  color: var(--cyan);
-  letter-spacing: 6px;
-  font-size: 18px;
-  text-shadow: 0 0 6px var(--cyan);
-}
-
-.cover-invaders {
-  background: linear-gradient(180deg, #001a3a, #0a0a18);
-}
-.cover-invaders::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 40% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 60% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 80% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 20% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 40% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 60% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 80% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 50% 80%, var(--cyan) 0 8px, transparent 9px);
-  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
-}
-
-.cover-rocas {
-  background: radial-gradient(circle at 50% 50%, #0a0a30, #000);
-}
-.cover-rocas::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 22% 30%, #888 0 18px, transparent 19px),
-    radial-gradient(circle at 75% 60%, #aaa 0 26px, transparent 27px),
-    radial-gradient(circle at 50% 80%, #777 0 14px, transparent 15px),
-    radial-gradient(circle at 88% 22%, var(--cyan) 0 2px, transparent 3px),
-    radial-gradient(circle at 12% 70%, var(--cyan) 0 2px, transparent 3px),
-    radial-gradient(circle at 60% 20%, var(--cyan) 0 2px, transparent 3px);
-}
-.cover-rocas::before {
-  content: "▲";
-  position: absolute;
-  left: 48%;
-  top: 44%;
-  color: var(--yellow);
-  font-size: 22px;
-  text-shadow: 0 0 8px var(--yellow);
-}
-
 .cover-asteroides {
   background:
     radial-gradient(
@@ -896,39 +816,6 @@ a {
   transform: rotate(-45deg);
   box-shadow: -13px 13px 9px 1px rgba(255, 0, 110, 0.55);
   filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.8));
-}
-
-.cover-rana {
-  background: linear-gradient(180deg, #001f2a, #0a0a18);
-}
-.cover-rana::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(0, 245, 255, 0.18) 0 20px,
-      transparent 20px 40px
-    ),
-    radial-gradient(circle at 50% 55%, var(--green) 0 14px, transparent 15px);
-  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.5));
-}
-
-.cover-duelo {
-  background: #0a0a18;
-}
-.cover-duelo::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(0deg, var(--ink) 0 10px, transparent 10px 20px)
-      50% 0/2px 100% no-repeat,
-    linear-gradient(var(--cyan), var(--cyan)) 6% 35%/6px 30% no-repeat,
-    linear-gradient(var(--magenta), var(--magenta)) 88% 35%/6px 30% no-repeat,
-    radial-gradient(circle at 60% 60%, var(--yellow) 0 5px, transparent 6px);
-  filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.4));
 }
 
 /* ===== detail screen ===== */
@@ -1239,16 +1126,45 @@ a {
 }
 
 .touch-controls {
+  position: relative;
   display: none;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   margin-top: 14px;
-  padding: 16px;
+  padding: 14px 18px 12px;
   border: 1px solid var(--line);
-  background: var(--bg-2);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--bg-3) 0%, var(--bg) 100%);
+  box-shadow:
+    0 20px 50px -25px rgba(0, 245, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+}
+.touch-controls::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(0, 245, 255, 0.14);
+  border-radius: 14px;
+  pointer-events: none;
+}
+.touch-controls::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 8px 8px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.6;
 }
 .touch-dpad {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-areas:
     ".    up   ."
@@ -1270,7 +1186,38 @@ a {
 .touch-dpad-right {
   grid-area: right;
 }
+.touch-dpad-hub {
+  grid-row: 2;
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, var(--bg-3) 0%, #08080d 80%);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.touch-dpad-hub-gem {
+  width: 10px;
+  height: 10px;
+  background: var(--cyan);
+  box-shadow:
+    0 0 10px var(--cyan),
+    inset 0 0 4px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: touch-hub-pulse 2s ease-in-out infinite;
+}
+@keyframes touch-hub-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
 .touch-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1281,53 +1228,127 @@ a {
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-  padding: 8px;
-  font-family: var(--pixel);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  background: transparent;
-  color: var(--ink);
-  border: 1px solid var(--cyan);
+  padding: 0;
+  background: linear-gradient(180deg, var(--bg-3), var(--bg));
+  color: var(--ink-dim);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-  clip-path: polygon(
-    6px 0,
-    100% 0,
-    100% calc(100% - 6px),
-    calc(100% - 6px) 100%,
-    0 100%,
-    0 6px
-  );
+  box-shadow:
+    0 4px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 80ms,
+    box-shadow 140ms,
+    color 140ms,
+    border-color 140ms,
+    background 140ms;
+}
+.touch-dpad-arrow {
+  width: 18px;
+  height: 18px;
+  transition: filter 140ms;
 }
 .touch-btn:active {
+  transform: translateY(3px);
   color: var(--cyan);
+  background: linear-gradient(180deg, #08161e, #030a0e);
+  border-color: var(--cyan);
   box-shadow:
-    0 0 14px rgba(0, 245, 255, 0.55),
-    inset 0 0 8px rgba(0, 245, 255, 0.35);
+    0 1px 0 #050507,
+    inset 0 0 16px rgba(0, 245, 255, 0.45),
+    0 0 16px rgba(0, 245, 255, 0.5);
+}
+.touch-btn:active .touch-dpad-arrow {
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 12px var(--cyan));
 }
 .touch-action-btn {
+  position: relative;
   min-width: 56px;
   min-height: 56px;
+  border-radius: 50%;
+  border-width: 2px;
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      rgba(255, 255, 255, 0.25),
+      transparent 50%
+    ),
+    radial-gradient(circle at 50% 55%, var(--ab-mid), var(--ab-deep) 75%);
+  box-shadow:
+    0 6px 0 #050507,
+    0 0 22px var(--ab-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4);
+}
+.touch-action-letter {
+  position: relative;
+  z-index: 2;
+  font-family: var(--pixel);
   font-size: 14px;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.touch-action-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  opacity: 0;
+  transition:
+    opacity 140ms,
+    transform 200ms;
 }
 .touch-action-a {
+  color: var(--magenta);
   border-color: var(--magenta);
+  --ab-mid: rgba(255, 0, 110, 0.7);
+  --ab-deep: rgba(110, 0, 40, 0.95);
+  --ab-glow: rgba(255, 0, 110, 0.4);
+}
+.touch-action-a .touch-action-letter {
+  text-shadow:
+    0 0 8px var(--magenta),
+    0 0 18px var(--magenta),
+    0 1px 0 rgba(0, 0, 0, 0.6);
 }
 .touch-action-a:active {
-  color: var(--magenta);
+  transform: translateY(4px) scale(0.97);
   box-shadow:
-    0 0 14px rgba(255, 0, 110, 0.55),
-    inset 0 0 8px rgba(255, 0, 110, 0.35);
+    0 1px 0 #050507,
+    0 0 36px var(--ab-glow),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+}
+.touch-action-a:active .touch-action-ring {
+  opacity: 1;
+  transform: scale(1.08);
 }
 .touch-action-b {
-  border-color: var(--yellow);
+  color: var(--cyan);
+  border-color: var(--cyan);
+  --ab-mid: rgba(0, 200, 230, 0.7);
+  --ab-deep: rgba(0, 50, 70, 0.95);
+  --ab-glow: rgba(0, 245, 255, 0.4);
+}
+.touch-action-b .touch-action-letter {
+  text-shadow:
+    0 0 8px var(--cyan),
+    0 0 18px var(--cyan),
+    0 1px 0 rgba(0, 0, 0, 0.6);
 }
 .touch-action-b:active {
-  color: var(--yellow);
+  transform: translateY(4px) scale(0.97);
   box-shadow:
-    0 0 14px rgba(245, 255, 0, 0.6),
-    inset 0 0 8px rgba(245, 255, 0, 0.35);
+    0 1px 0 #050507,
+    0 0 36px var(--ab-glow),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+}
+.touch-action-b:active .touch-action-ring {
+  opacity: 1;
+  transform: scale(1.08);
 }
 .touch-btn--off {
   opacity: 0.28;
@@ -1335,85 +1356,32 @@ a {
   color: var(--ink-faint);
   cursor: default;
   box-shadow: none;
+  background: linear-gradient(180deg, var(--bg-3), var(--bg));
 }
 .touch-btn--off:active {
+  transform: none;
   color: var(--ink-faint);
   box-shadow: none;
+  background: linear-gradient(180deg, var(--bg-3), var(--bg));
+}
+.touch-btn--off .touch-dpad-arrow,
+.touch-btn--off:active .touch-dpad-arrow {
+  filter: none;
+}
+.touch-btn--off.touch-action-btn {
+  background: var(--bg-3);
+}
+.touch-btn--off .touch-action-letter {
+  color: var(--ink-faint);
+  text-shadow: none;
+}
+.touch-btn--off .touch-action-ring {
+  opacity: 0;
 }
 
 @media (max-width: 768px) {
   .touch-controls {
     display: flex;
-  }
-}
-
-/* fake in-screen game */
-.game-arena {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 50% 50%, #0a0030 0%, #000 70%), #000;
-}
-.game-arena .grid-floor {
-  position: absolute;
-  inset: 50% 0 0 0;
-  background:
-    linear-gradient(to right, rgba(0, 245, 255, 0.4) 1px, transparent 1px) 0
-      0/40px 40px,
-    linear-gradient(to bottom, rgba(0, 245, 255, 0.4) 1px, transparent 1px) 0
-      0/40px 40px;
-  transform: perspective(300px) rotateX(70deg);
-  transform-origin: top;
-  animation: gridscroll 4s linear infinite;
-  opacity: 0.7;
-}
-.game-arena .player-ship {
-  position: absolute;
-  bottom: 14%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-left: 14px solid transparent;
-  border-right: 14px solid transparent;
-  border-bottom: 22px solid var(--cyan);
-  filter: drop-shadow(0 0 8px var(--cyan));
-  transform: translateX(-50%);
-  animation: bob 2s ease-in-out infinite;
-}
-@keyframes bob {
-  50% {
-    transform: translateX(-50%) translateY(-6px);
-  }
-}
-.game-arena .enemy {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: var(--magenta);
-  box-shadow: 0 0 8px var(--magenta);
-}
-.game-arena .e1 {
-  top: 18%;
-  left: 22%;
-  animation: drift 3s ease-in-out infinite;
-}
-.game-arena .e2 {
-  top: 26%;
-  left: 70%;
-  animation: drift 3.2s ease-in-out infinite reverse;
-}
-.game-arena .e3 {
-  top: 14%;
-  left: 50%;
-  background: var(--yellow);
-  box-shadow: 0 0 8px var(--yellow);
-  animation: drift 2.8s ease-in-out infinite;
-}
-@keyframes drift {
-  50% {
-    transform: translate(20px, 10px);
   }
 }
 

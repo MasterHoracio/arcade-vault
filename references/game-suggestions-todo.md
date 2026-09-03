@@ -21,9 +21,10 @@ El agente lee este archivo antes de proponer y lo actualiza después. Puedes edi
     (breakout, shooter libre, snake, tetrominós).
   - Mecánica: dos paletas verticales, una CPU con IA simple, deflectan una pelota;
     puntaje = puntos anotados antes de perder.
-  - Riesgos: bajos — un solo canvas, primitivas geométricas, `cover-duelo` ya
-    reservado en `globals.css` y fila `games` (id `duelo-pixel`, color `cyan`) ya
-    existe como placeholder con `plays`/`best` en 0, solo falta el engine real.
+  - Riesgos: bajos — un solo canvas, primitivas geométricas. Nota
+    (2026-09-03): `cover-duelo` y la fila `games` con id `duelo-pixel` se
+    eliminaron del catálogo (juego placeholder sin engine); habría que
+    crear ambos desde cero al implementar esta propuesta.
 
 - [ ] **Aleteo** (`aleteo`, ARCADE) — sugerido 2026-09-01
   - Por qué: variante de "vuelo continuo con un solo input" que no repite ninguna
