@@ -1238,6 +1238,77 @@ a {
   box-shadow: 0 0 6px var(--green);
 }
 
+.touch-controls {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--ink-faint);
+  background: rgba(255, 255, 255, 0.02);
+}
+.touch-dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.touch-dpad-row {
+  display: flex;
+  gap: 6px;
+}
+.touch-actions {
+  display: flex;
+  gap: 10px;
+}
+.touch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 56px;
+  padding: 8px 14px;
+  font-family: var(--pixel);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--yellow);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  clip-path: polygon(
+    6px 0,
+    100% 0,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    0 100%,
+    0 6px
+  );
+}
+.touch-btn:active {
+  color: var(--yellow);
+  box-shadow:
+    0 0 14px rgba(245, 255, 0, 0.6),
+    inset 0 0 8px rgba(245, 255, 0, 0.35);
+}
+.touch-action-btn {
+  border-color: var(--magenta);
+}
+.touch-action-btn:active {
+  color: var(--magenta);
+  box-shadow:
+    0 0 14px rgba(255, 0, 110, 0.55),
+    inset 0 0 8px rgba(255, 0, 110, 0.35);
+}
+
+@media (max-width: 768px) {
+  .touch-controls {
+    display: flex;
+  }
+}
+
 /* fake in-screen game */
 .game-arena {
   position: absolute;
