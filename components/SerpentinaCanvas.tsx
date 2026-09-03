@@ -5,15 +5,18 @@ import {
   createSerpentinaGame,
   type SerpentinaHudState,
 } from "@/lib/games/serpentina/engine";
+import type { SkinId } from "@/lib/games/skins";
 
 interface SerpentinaCanvasProps {
   paused: boolean;
+  skin: SkinId;
   onStateChange: (state: SerpentinaHudState) => void;
   onGameOver: (finalScore: number) => void;
 }
 
 export default function SerpentinaCanvas({
   paused,
+  skin,
   onStateChange,
   onGameOver,
 }: SerpentinaCanvasProps) {
@@ -24,7 +27,13 @@ export default function SerpentinaCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const game = createSerpentinaGame(canvas, { onStateChange, onGameOver });
+    const game = createSerpentinaGame(
+      canvas,
+      { onStateChange, onGameOver },
+      {
+        skin,
+      },
+    );
     gameRef.current = game;
     game.start();
 
@@ -38,6 +47,10 @@ export default function SerpentinaCanvas({
   useEffect(() => {
     gameRef.current?.setPaused(paused);
   }, [paused]);
+
+  useEffect(() => {
+    gameRef.current?.setSkin(skin);
+  }, [skin]);
 
   return (
     <canvas

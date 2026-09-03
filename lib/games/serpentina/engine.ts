@@ -1,6 +1,8 @@
 // ===== lib/games/serpentina/engine.ts — motor de Snake diseñado desde cero =====
 
 import { SPRITE_ATLAS } from "./sprites";
+import { SERPENTINA_SKINS, type FruitTint } from "./skins";
+import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
 
 export interface SerpentinaHudState {
   score: number;
@@ -16,12 +18,18 @@ export interface SerpentinaCallbacks {
 export function createSerpentinaGame(
   canvas: HTMLCanvasElement,
   callbacks: SerpentinaCallbacks,
+  options?: { skin?: SkinId },
 ): {
   start: () => void;
   stop: () => void;
   setPaused: (paused: boolean) => void;
+  setSkin: (skin: SkinId) => void;
 } {
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+
+  // ── Skin activo ──────────────────────────────────────────────────────────
+  let activeSkin: SkinId = options?.skin ?? DEFAULT_SKIN;
+  let palette = SERPENTINA_SKINS[activeSkin];
 
   // ── Constantes de tablero ────────────────────────────────────────────────
   const GRID_COLS = 40;
@@ -37,14 +45,58 @@ export function createSerpentinaGame(
 
   const FRUIT_NAMES = Object.keys(SPRITE_ATLAS.fruits);
 
-  // ── Carga de sprites ─────────────────────────────────────────────────────
-  let fruitsImg: HTMLImageElement | null = null;
+  // ── Carga y re-tinte de sprites ──────────────────────────────────────────
+  // Una copia offscreen por skin, generada una sola vez al cargar el PNG.
+  // `setSkin` solo cambia cuál de esas copias usa `drawImage`.
+  let fruitSheets: Partial<Record<SkinId, CanvasImageSource>> = {};
   let fruitsLoaded = false;
+
+  /** Genera la variante re-tintada del spritesheet en un canvas offscreen. */
+  function tintSheet(
+    img: HTMLImageElement,
+    tint: FruitTint,
+  ): CanvasImageSource {
+    const oc = document.createElement("canvas");
+    oc.width = img.width;
+    oc.height = img.height;
+    const octx = oc.getContext("2d") as CanvasRenderingContext2D;
+
+    // 1. Base filtrada (saturación / escala de grises).
+    octx.filter = tint.filter;
+    octx.drawImage(img, 0, 0);
+    octx.filter = "none";
+
+    // 2. Matiz monocromo modulado por luminancia (solo retro).
+    if (tint.multiply) {
+      octx.globalCompositeOperation = "multiply";
+      octx.fillStyle = tint.multiply;
+      octx.fillRect(0, 0, oc.width, oc.height);
+    }
+
+    // 3. Piso de luminancia: ningún píxel queda por debajo de este color.
+    octx.globalCompositeOperation = "lighten";
+    octx.fillStyle = tint.floor;
+    octx.fillRect(0, 0, oc.width, oc.height);
+
+    // 4. Los pasos 2 y 3 pintan el rectángulo completo: recuperar el alfa
+    //    original del PNG para no dejar un bloque sólido de color.
+    octx.globalCompositeOperation = "destination-in";
+    octx.drawImage(img, 0, 0);
+    octx.globalCompositeOperation = "source-over";
+
+    return oc;
+  }
 
   function loadFruitsImage(cb: () => void) {
     const img = new Image();
     img.onload = () => {
-      fruitsImg = img;
+      const sheets: Partial<Record<SkinId, CanvasImageSource>> = {};
+      for (const id of Object.keys(SERPENTINA_SKINS) as SkinId[]) {
+        const tint = SERPENTINA_SKINS[id].fruitTint;
+        // clasico: PNG original, sin ningún filtro.
+        sheets[id] = tint ? tintSheet(img, tint) : img;
+      }
+      fruitSheets = sheets;
       fruitsLoaded = true;
       cb();
     };
@@ -177,11 +229,12 @@ export function createSerpentinaGame(
   }
 
   function drawFruit() {
-    if (!fruit || !fruitsLoaded || !fruitsImg) return;
+    const sheet = fruitSheets[activeSkin];
+    if (!fruit || !fruitsLoaded || !sheet) return;
     const rect = SPRITE_ATLAS.fruits[fruit.sprite];
     if (!rect) return;
     ctx.drawImage(
-      fruitsImg,
+      sheet,
       rect.x,
       rect.y,
       rect.w,
@@ -193,21 +246,42 @@ export function createSerpentinaGame(
     );
   }
 
+  /** Activa el halo del skin; no-op cuando shadowBlur es 0 (clasico/retro). */
+  function glow() {
+    if (palette.shadowBlur <= 0) return;
+    ctx.shadowColor = palette.shadowColor;
+    ctx.shadowBlur = palette.shadowBlur;
+  }
+
+  function clearGlow() {
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+  }
+
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = palette.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "#2fbf4f";
+    glow();
+    ctx.fillStyle = palette.snakeBody;
     for (const s of snake) {
       ctx.fillRect(s.x * CELL, s.y * CELL, CELL, CELL);
     }
+    // La cabeza se repinta encima; en clasico usa el mismo verde que el cuerpo,
+    // así que el resultado es idéntico al look original.
+    const head = snake[0];
+    if (head) {
+      ctx.fillStyle = palette.snakeHead;
+      ctx.fillRect(head.x * CELL, head.y * CELL, CELL, CELL);
+    }
 
     drawFruit();
+    clearGlow();
 
     if (gameState === "gameover") {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.fillStyle = palette.overlayScrim;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = palette.overlayTitle;
       ctx.font = "bold 64px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -275,5 +349,18 @@ export function createSerpentinaGame(
     }
   }
 
-  return { start, stop, setPaused };
+  /**
+   * Cambia la paleta activa y repinta de inmediato. No toca el estado de la
+   * partida (snake, score, lives, level, fruta) ni dispara onGameOver: el
+   * jugador puede alternar skins a media partida o en pausa sin perder nada.
+   */
+  function setSkin(skin: SkinId) {
+    activeSkin = skin;
+    palette = SERPENTINA_SKINS[skin];
+    // Repintado inmediato solo si la partida ya arrancó (snake inicializada);
+    // en pausa el loop está detenido, así que este draw() es el único repintado.
+    if (!stopped && snake.length > 0) draw();
+  }
+
+  return { start, stop, setPaused, setSkin };
 }

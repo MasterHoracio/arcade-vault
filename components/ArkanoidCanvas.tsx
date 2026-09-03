@@ -5,15 +5,18 @@ import {
   createArkanoidGame,
   type ArkanoidHudState,
 } from "@/lib/games/arkanoid/engine";
+import type { SkinId } from "@/lib/games/skins";
 
 interface ArkanoidCanvasProps {
   paused: boolean;
+  skin: SkinId;
   onStateChange: (state: ArkanoidHudState) => void;
   onGameOver: (finalScore: number) => void;
 }
 
 export default function ArkanoidCanvas({
   paused,
+  skin,
   onStateChange,
   onGameOver,
 }: ArkanoidCanvasProps) {
@@ -24,7 +27,13 @@ export default function ArkanoidCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const game = createArkanoidGame(canvas, { onStateChange, onGameOver });
+    const game = createArkanoidGame(
+      canvas,
+      { onStateChange, onGameOver },
+      {
+        skin,
+      },
+    );
     gameRef.current = game;
     game.start();
 
@@ -38,6 +47,10 @@ export default function ArkanoidCanvas({
   useEffect(() => {
     gameRef.current?.setPaused(paused);
   }, [paused]);
+
+  useEffect(() => {
+    gameRef.current?.setSkin(skin);
+  }, [skin]);
 
   return (
     <canvas

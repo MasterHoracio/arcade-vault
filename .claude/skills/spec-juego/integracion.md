@@ -2,6 +2,10 @@
 
 Referencia para `/spec-juego`. Describe, con archivos y líneas reales del proyecto (según el estado en que se escribió esta guía — verifica que sigan vigentes antes de citarlos en una spec), los 6 puntos que hay que tocar para que un juego nuevo quede jugable, tenga cover y aparezca en el leaderboard. No es texto para copiar en la spec tal cual — es el mapa del que la spec deriva su plan de implementación con rutas concretas.
 
+Un juego nuevo debería nacer con sus 3 skins (`clasico`/`neon`/`retro`) ya
+resueltos en vez de necesitar una pasada posterior de `skin-designer` — ver
+la nota de skins dentro del punto 3 y `references/skins-contract.md`.
+
 ## Los 6 puntos de cableado
 
 1. **Fila en la tabla `games` de Supabase**, vía `mcp__supabase__apply_migration`. Columnas = la interfaz `Game` de `lib/games.ts:6` (`id`, `title`, `short`, `long`, `cat`, `cover`, `color`, `best`, `plays`). `cat` ∈ `ARCADE`/`PUZZLE`/`SHOOTER`/`VERSUS`, `color` ∈ `cyan`/`magenta`/`yellow`/`green` (mismos `check` constraints que las columnas existentes).
@@ -13,7 +17,7 @@ Referencia para `/spec-juego`. Describe, con archivos y líneas reales del proye
    - Solo las variables de color del tema: `--cyan`, `--magenta`, `--yellow`, `--green`, `--ink`, `--ink-dim`, `--ink-faint`, `--line`, `--line-2`.
    - El valor de la columna `cover` en Supabase es el nombre de esta clase (ej. `"cover-asteroides"`); `GameCard` y el detalle la concatenan después de `cover-bg `.
 
-3. **`lib/games/<slug>/engine.ts`** — factory closure que exporta `create<X>Game(canvas, callbacks): { start, stop, setPaused }`, más las interfaces `<X>HudState` (mínimo `score`, `lives`, `level`, más los campos extra que decida la Fase 2 de la skill) y `<X>Callbacks` (`onStateChange`, `onGameOver`). Modelo a copiar: `lib/games/asteroids/engine.ts`, con este orden interno:
+3. **`lib/games/<slug>/engine.ts`** — factory closure que exporta `create<X>Game(canvas, callbacks, options?: { skin?: SkinId }): { start, stop, setPaused, setSkin }`, más las interfaces `<X>HudState` (mínimo `score`, `lives`, `level`, más los campos extra que decida la Fase 2 de la skill) y `<X>Callbacks` (`onStateChange`, `onGameOver`). Modelo a copiar: `lib/games/asteroids/engine.ts`, con este orden interno:
    - Input (`keys`, `justPressed`, `onKeyDown`/`onKeyUp`, `pressed(code)`).
    - Utilidades (`wrap`, `dist`, `rand`, `randInt`, etc.).
    - Constantes del juego (velocidades, puntos, duraciones).
@@ -26,10 +30,12 @@ Referencia para `/spec-juego`. Describe, con archivos y líneas reales del proye
    - `stop()` — cancela el loop, remueve listeners.
    - `setPaused(paused)` — cancela/reanuda el `requestAnimationFrame` sin resetear estado; ningún timer interno avanza mientras está pausado porque `update(dt)` no se llama.
    - `onGameOver` se invoca **una sola vez**, exactamente en la transición a estado de derrota — nunca en frames subsiguientes.
+   - **Skins** — la paleta vive aparte, en `lib/games/<slug>/skins.ts` (`<X>SKINS: Record<SkinId, <X>Palette>`), nunca como literales sueltos en el engine. `draw()` lee la paleta activa; `setSkin(skin)` la reasigna y repinta sin resetear el estado. Ver `references/skins-contract.md` para los 3 skins y las reglas de contraste sobre el fondo oscuro.
 
 4. **`components/<X>Canvas.tsx`** — client component (`"use client"`), forma idéntica a `components/AsteroidsCanvas.tsx`:
-   - Un `useEffect` con deps `[]` que llama `create<X>Game(canvasRef.current, { onStateChange, onGameOver })`, guarda la instancia en un ref, llama `.start()`; el cleanup llama `.stop()`.
+   - Un `useEffect` con deps `[]` que llama `create<X>Game(canvasRef.current, { onStateChange, onGameOver }, { skin })`, guarda la instancia en un ref, llama `.start()`; el cleanup llama `.stop()`.
    - Un segundo `useEffect` con dep `[paused]` que llama `instance.setPaused(paused)`.
+   - Un tercer `useEffect` con dep `[skin]` que llama `instance.setSkin(skin)`.
    - `<canvas ref={canvasRef} width={W} height={H} style={{ ... }} />` — ver la sección de letterbox abajo para el `style` cuando `W:H` no es 4:3.
 
 5. **Cableado en `components/PlayerClient.tsx`.** Ver "El refactor a registro" abajo — es el punto que cambia según si ya existe `lib/games/registry.ts` o no.
@@ -46,15 +52,16 @@ Estado actual (después de la spec de Asteroides): `PlayerClient.tsx` ramifica p
 export interface GameRegistryEntry {
   Canvas: React.ComponentType<{
     paused: boolean;
+    skin: SkinId;
     onStateChange: (state: HudState) => void; // HudState = unión o forma común mínima
     onGameOver: (finalScore: number) => void;
   }>;
-  // campos extra de HUD que este juego expone, para que PlayerClient sepa qué renderizar
+  skins: SkinId[]; // skins que este juego implementa de verdad hoy
 }
 
 export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
-  asteroides: { Canvas: AsteroidsCanvas },
-  // <slug>: { Canvas: <X>Canvas },
+  asteroides: { Canvas: AsteroidsCanvas, skins: ["clasico", "neon", "retro"] },
+  // <slug>: { Canvas: <X>Canvas, skins: [...] },
 };
 ```
 

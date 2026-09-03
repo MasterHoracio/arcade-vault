@@ -1,5 +1,8 @@
 // ===== lib/games/tetris/engine.ts — puerto TS de references/started-games/03-tetris/game.js =====
 
+import type { SkinId } from "@/lib/games/skins";
+import { TETRIS_SKINS } from "./skins";
+
 export interface TetrisHudState {
   score: number;
   lines: number;
@@ -14,18 +17,6 @@ export interface TetrisCallbacks {
 const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
-
-const COLORS: (string | null)[] = [
-  null,
-  "#4dd0e1", // I - cyan
-  "#ffd54f", // O - yellow
-  "#ba68c8", // T - purple
-  "#81c784", // S - green
-  "#e57373", // Z - red
-  "#90caf9", // J - pale blue
-  "#ffb74d", // L - orange
-  "#9e9e9e", // N - tuerca (gris metálico)
-];
 
 const PIECES: (number[][] | null)[] = [
   null,
@@ -84,13 +75,18 @@ export function createTetrisGame(
   canvas: HTMLCanvasElement,
   nextCanvas: HTMLCanvasElement,
   callbacks: TetrisCallbacks,
+  options?: { skin?: SkinId },
 ): {
   start: () => void;
   stop: () => void;
   setPaused: (paused: boolean) => void;
+  setSkin: (skin: SkinId) => void;
 } {
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
   const nextCtx = nextCanvas.getContext("2d") as CanvasRenderingContext2D;
+
+  let activeSkin: SkinId = options?.skin ?? "clasico";
+  let initialized = false;
 
   let board: number[][];
   let current: Piece;
@@ -231,19 +227,30 @@ export function createTetrisGame(
     alpha?: number,
   ) {
     if (!colorIndex) return;
-    const color = COLORS[colorIndex] as string;
+    const palette = TETRIS_SKINS[activeSkin];
+    const color = palette.pieces[colorIndex] as string;
     context.globalAlpha = alpha ?? 1;
+    if (activeSkin === "neon") {
+      context.shadowColor = color;
+      context.shadowBlur = 8;
+    }
     context.fillStyle = color;
     context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-    context.fillStyle = "rgba(255,255,255,0.12)";
+    context.shadowBlur = 0;
+    context.fillStyle = palette.highlight;
     context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
     context.globalAlpha = 1;
   }
 
   function drawGrid() {
+    // "clasico" preserva el look original: lee el token --line en vivo.
+    // "neon"/"retro" usan un color fijo propio de su paleta.
     ctx.strokeStyle =
-      getComputedStyle(document.documentElement).getPropertyValue("--line") ||
-      "rgba(255,255,255,0.08)";
+      activeSkin === "clasico"
+        ? getComputedStyle(document.documentElement).getPropertyValue(
+            "--line",
+          ) || "rgba(255,255,255,0.08)"
+        : TETRIS_SKINS[activeSkin].grid;
     ctx.lineWidth = 0.5;
     for (let c = 1; c < COLS; c++) {
       ctx.beginPath();
@@ -338,6 +345,7 @@ export function createTetrisGame(
     next = randomPiece();
     spawn();
     updateHUD();
+    initialized = true;
     if (animId !== null) cancelAnimationFrame(animId);
     animId = requestAnimationFrame(loop);
   }
@@ -389,5 +397,13 @@ export function createTetrisGame(
     }
   }
 
-  return { start, stop, setPaused };
+  function setSkin(skin: SkinId) {
+    if (skin === activeSkin) return;
+    activeSkin = skin;
+    if (!initialized) return;
+    draw();
+    drawNext();
+  }
+
+  return { start, stop, setPaused, setSkin };
 }

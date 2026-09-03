@@ -35,11 +35,23 @@ Formato automático: un hook `PostToolUse` en `.claude/settings.json` corre `pre
 
 Cada juego es un engine de canvas en TypeScript vanilla más un wrapper de React. Juegos actuales: **arkanoid**, **asteroides**, **serpentina** (snake), **tetris**. Todos los juegos ya implementados se pueden consultar en `references/implemented-games.md`.
 
-- `lib/games/<slug>/engine.ts` — factory closure `create<X>Game(canvas, callbacks)` que devuelve `{ start, stop, setPaused }`, y exporta `<X>HudState` y `<X>Callbacks` (`onStateChange`, `onGameOver`). Todo el estado vive dentro del closure, nunca a nivel de módulo. `onGameOver` se dispara exactamente una vez.
-- `components/<X>Canvas.tsx` — client component: un `useEffect` con deps `[]` que crea el juego, lo arranca y lo detiene en el cleanup; otro `useEffect` con dep `[paused]` que llama `setPaused`.
-- `lib/games/registry.ts` — `GAME_REGISTRY: Record<string, { Canvas }>` mapea el `id` del juego (el mismo de la tabla `games`) a su componente. `PlayerClient` resuelve el canvas por ahí; **no agregues condicionales por `game.id` en `PlayerClient`**.
+- `lib/games/<slug>/engine.ts` — factory closure `create<X>Game(canvas, callbacks, options?: { skin?: SkinId })` que devuelve `{ start, stop, setPaused, setSkin }`, y exporta `<X>HudState` y `<X>Callbacks` (`onStateChange`, `onGameOver`). Todo el estado vive dentro del closure, nunca a nivel de módulo. `onGameOver` se dispara exactamente una vez. `setSkin` reasigna la paleta activa y repinta sin reiniciar la partida.
+- `components/<X>Canvas.tsx` — client component: un `useEffect` con deps `[]` que crea el juego, lo arranca y lo detiene en el cleanup; otro `useEffect` con dep `[paused]` que llama `setPaused`; otro con dep `[skin]` que llama `setSkin`.
+- `lib/games/registry.ts` — `GAME_REGISTRY: Record<string, { Canvas, skins }>` mapea el `id` del juego (el mismo de la tabla `games`) a su componente y a los skins que de verdad implementa. `PlayerClient` resuelve el canvas por ahí; **no agregues condicionales por `game.id` en `PlayerClient`**.
 - El cover de cada juego es una clase CSS `.cover-<slug>` generada con puros gradientes en `app/globals.css` (sección "Cover art generators"), y el valor de la columna `cover` en Supabase es ese nombre de clase.
 - Assets binarios de juegos van en `public/juegos/<slug>/`.
+
+### Skins
+
+Todo juego debe ofrecer 3 skins: `clasico` (default, idéntico al look
+original), `neon` (paleta del sitio + glow) y `retro` (fósforo CRT
+monocromo). `lib/games/skins.ts` es el contrato compartido (`SkinId`,
+persistencia en `localStorage` bajo `av_skin`); `lib/games/<slug>/skins.ts`
+es la paleta propia de cada juego. Reglas de diseño, contraste sobre el
+fondo oscuro, y la técnica de re-tinte de sprites viven en
+`references/skins-contract.md`. La app es dark-only — no hay modo claro ni
+`prefers-color-scheme`; "verse bien en modo oscuro" se verifica con las
+reglas de contraste de ese documento, no a ojo.
 
 `references/started-games/` guarda las versiones originales en JS vanilla de los juegos que se portan; `references/templates/` los mockups JSX/HTML de los que salió la UI. Es material de consulta — no se compila.
 
@@ -61,3 +73,11 @@ Skills disponibles:
 ## Skills
 
 Usa siempre /frontend-design para diseñar la interfaz de usuario.
+
+## Agentes
+
+`game-planner` (`.claude/agents/game-planner.md`) decide qué juego nuevo agregar: analiza el catálogo (Supabase + `references/implemented-games.md`) contra criterios de balance, factibilidad y encaje con el leaderboard, y lleva memoria de lo ya sugerido/descartado en `references/game-suggestions-todo.md` para no repetirse entre corridas. Corre antes de `/spec-juego`, que ya recibe el juego decidido.
+
+`game-jam` (`.claude/agents/game-jam.md`) recibe un tema libre (ej. "espacio profundo") y explora 3 variantes de un mismo juego inspirado en ese tema, cada una como spec completa en `specs/game-jam/<game-id>/`. No decide qué juego agregar por balance de catálogo (eso es `game-planner`) ni escribe código ni migra Supabase; solo produce las 3 specs para revisión. Elegida una variante, se numera en `specs/` vía `/spec-juego <game-id>`.
+
+`skin-designer` (`.claude/agents/skin-designer.md`) audita e implementa los 3 skins (`clasico`, `neon`, `retro`) del juego que le indiques — uno por corrida, nunca decide cuál por su cuenta. Lleva memoria de qué juegos ya tienen los 3 skins en `references/game-with-themes.md`. No agrega juegos nuevos ni explora temas de concepto (eso es `game-planner`/`game-jam`); solo re-tematiza un juego ya implementado.

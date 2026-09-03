@@ -1,5 +1,11 @@
 // ===== lib/games/arkanoid/engine.ts — puerto TS de references/started-games/04-arkanoid/game.js =====
 
+import { DEFAULT_SKIN, SKIN_IDS, type SkinId } from "@/lib/games/skins";
+import {
+  ARKANOID_SKINS,
+  type ArkanoidSpriteRole,
+} from "@/lib/games/arkanoid/skins";
+
 export interface ArkanoidHudState {
   score: number;
   lives: number;
@@ -80,6 +86,47 @@ const SPRITES = {
   } as Record<string, SpriteFrame>,
 };
 
+// ── Re-tinte de sprites por skin ──────────────────────────────────────────
+// El color de Arkanoid vive dentro del PNG, así que cada skin distinto de
+// "clasico" necesita una copia re-tintada del spritesheet en un canvas
+// offscreen (una sola vez al cargar el asset, nunca por frame).
+//
+// `norm` = 255 / luminancia del color de cuerpo original de esa región, medida
+// sobre el PNG. Al dibujar la región con `grayscale(1) brightness(norm)` el
+// cuerpo del sprite queda en blanco y el bisel/borde conservan su gradación
+// relativa; el `multiply` posterior contra el color del skin deja el cuerpo
+// exactamente en ese color (por eso el contraste WCAG se calcula sobre él).
+interface TintRegion {
+  role: ArkanoidSpriteRole;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  norm: number;
+}
+
+const TINT_REGIONS: TintRegion[] = [
+  // Bloques (32x16). El nombre es la clave del original, no el matiz real.
+  { role: "red", x: 32, y: 176, w: 32, h: 16, norm: 3.385 }, // cuerpo #c02a3e
+  { role: "cyan", x: 32, y: 192, w: 32, h: 16, norm: 1.484 }, // cuerpo #4fc99c
+  { role: "green", x: 32, y: 208, w: 32, h: 16, norm: 1.66 }, // cuerpo #44aaf3
+  { role: "magenta", x: 32, y: 224, w: 32, h: 16, norm: 3.528 }, // cuerpo #632ff4
+  { role: "yellow", x: 32, y: 240, w: 32, h: 16, norm: 1.365 }, // cuerpo #d9bd4c
+  { role: "hotpink", x: 32, y: 256, w: 32, h: 16, norm: 1.759 }, // cuerpo #fc7d1c
+  { role: "gray", x: 32, y: 288, w: 32, h: 16, norm: 2.541 }, // cuerpo #646373
+  // Filas de explosión (4 frames de 32x16 contiguos = 128x16), mismo matiz de
+  // origen que su bloque, así que comparten `norm` y color objetivo.
+  { role: "red", x: 256, y: 176, w: 128, h: 16, norm: 3.385 },
+  { role: "cyan", x: 256, y: 192, w: 128, h: 16, norm: 1.484 },
+  { role: "green", x: 256, y: 208, w: 128, h: 16, norm: 1.66 },
+  { role: "magenta", x: 256, y: 224, w: 128, h: 16, norm: 3.528 },
+  { role: "yellow", x: 256, y: 240, w: 128, h: 16, norm: 1.365 },
+  { role: "hotpink", x: 256, y: 256, w: 128, h: 16, norm: 1.759 },
+  // Paleta y bola comparten el mismo gris metálico de cuerpo (#babac5).
+  { role: "paddle", x: 32, y: 112, w: 162, h: 14, norm: 1.365 },
+  { role: "ball", x: 32, y: 32, w: 16, h: 16, norm: 1.365 },
+];
+
 // ── levels.js ─────────────────────────────────────────────────────────────
 interface BlockDef {
   col: number;
@@ -150,10 +197,12 @@ const LEVELS: LevelDef[] = (() => {
 export function createArkanoidGame(
   canvas: HTMLCanvasElement,
   callbacks: ArkanoidCallbacks,
+  options?: { skin?: SkinId },
 ): {
   start: () => void;
   stop: () => void;
   setPaused: (paused: boolean) => void;
+  setSkin: (skin: SkinId) => void;
 } {
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
@@ -168,19 +217,77 @@ export function createArkanoidGame(
   const BASE_BALL_VX = 170;
   const BASE_BALL_VY = -255;
 
+  // ── Skin activo ───────────────────────────────────────────────────────
+  let activeSkin: SkinId = options?.skin ?? DEFAULT_SKIN;
+  const palette = () => ARKANOID_SKINS[activeSkin];
+
+  function glow(role: ArkanoidSpriteRole) {
+    const p = palette();
+    if (p.shadowBlur > 0 && p.sprites) {
+      ctx.shadowColor = p.sprites[role];
+      ctx.shadowBlur = p.shadowBlur;
+    }
+  }
+  function clearGlow() {
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+  }
+
   // ── Spritesheet loading ───────────────────────────────────────────────
-  let ssImg: HTMLCanvasElement | null = null;
+  // Una hoja offscreen por skin, cacheada al cargar el PNG. setSkin solo
+  // cambia cuál de estas hojas usa drawImage — nunca re-tiñe por frame.
+  const sheets: Partial<Record<SkinId, HTMLCanvasElement>> = {};
   let ssLoaded = false;
+
+  /** Re-tiñe una región del spritesheet al color del skin, conservando bisel y alfa. */
+  function tintRegion(
+    target: CanvasRenderingContext2D,
+    raw: CanvasImageSource,
+    r: TintRegion,
+    color: string,
+  ) {
+    const tile = document.createElement("canvas");
+    tile.width = r.w;
+    tile.height = r.h;
+    const tctx = tile.getContext("2d") as CanvasRenderingContext2D;
+    // 1. gris normalizado: el cuerpo del sprite sube a blanco.
+    tctx.filter = `grayscale(1) brightness(${r.norm})`;
+    tctx.drawImage(raw, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+    tctx.filter = "none";
+    // 2. multiply: cuerpo -> color exacto del skin, bisel -> sombras del mismo matiz.
+    tctx.globalCompositeOperation = "multiply";
+    tctx.fillStyle = color;
+    tctx.fillRect(0, 0, r.w, r.h);
+    // 3. multiply también pinta donde el PNG era transparente: recorta con la máscara alfa original.
+    tctx.globalCompositeOperation = "destination-in";
+    tctx.drawImage(raw, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+    tctx.globalCompositeOperation = "source-over";
+
+    target.clearRect(r.x, r.y, r.w, r.h);
+    target.drawImage(tile, r.x, r.y);
+  }
+
+  function buildSheets(raw: HTMLImageElement) {
+    for (const skin of SKIN_IDS) {
+      const oc = document.createElement("canvas");
+      oc.width = raw.width;
+      oc.height = raw.height;
+      const octx = oc.getContext("2d") as CanvasRenderingContext2D;
+      octx.drawImage(raw, 0, 0);
+      const sprites = ARKANOID_SKINS[skin].sprites;
+      // sprites === null (clasico): el PNG queda intacto, sin ningún filtro.
+      if (sprites) {
+        for (const region of TINT_REGIONS)
+          tintRegion(octx, raw, region, sprites[region.role]);
+      }
+      sheets[skin] = oc;
+    }
+  }
 
   function loadSpritesheet(cb: () => void) {
     const rawImg = new Image();
     rawImg.onload = () => {
-      const oc = document.createElement("canvas");
-      oc.width = rawImg.width;
-      oc.height = rawImg.height;
-      const octx = oc.getContext("2d") as CanvasRenderingContext2D;
-      octx.drawImage(rawImg, 0, 0);
-      ssImg = oc;
+      buildSheets(rawImg);
       ssLoaded = true;
       cb();
     };
@@ -196,9 +303,10 @@ export function createArkanoidGame(
     w: number,
     h: number,
   ) {
-    if (!ssLoaded || !ssImg) return;
+    const sheet = sheets[activeSkin];
+    if (!ssLoaded || !sheet) return;
     context.drawImage(
-      ssImg,
+      sheet,
       frame.sx,
       frame.sy,
       frame.sw,
@@ -218,7 +326,8 @@ export function createArkanoidGame(
     w: number,
     h: number,
   ) {
-    if (!ssLoaded || !ssImg) return;
+    const sheet = sheets[activeSkin];
+    if (!ssLoaded || !sheet) return;
     let sp: SpriteFrame | undefined;
     if (name.startsWith("block_")) {
       sp = SPRITES.blocks[name.slice(6)];
@@ -226,7 +335,7 @@ export function createArkanoidGame(
       sp = SPRITES[name as "paddle" | "ball"];
     }
     if (!sp) return;
-    context.drawImage(ssImg, sp.sx, sp.sy, sp.sw, sp.sh, x, y, w, h);
+    context.drawImage(sheet, sp.sx, sp.sy, sp.sw, sp.sh, x, y, w, h);
   }
 
   // ── Estado del juego ──────────────────────────────────────────────────
@@ -445,9 +554,9 @@ export function createArkanoidGame(
   }
 
   function drawOverlay(message: string) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.fillStyle = palette().overlayScrim;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = palette().overlayText;
     ctx.font = "bold 64px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -455,11 +564,12 @@ export function createArkanoidGame(
   }
 
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = palette().background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (const block of blocks) {
-      if (block.alive)
+      if (block.alive) {
+        glow(block.color as ArkanoidSpriteRole);
         drawSprite(
           ctx,
           "block_" + block.color,
@@ -468,6 +578,8 @@ export function createArkanoidGame(
           block.w,
           block.h,
         );
+        clearGlow();
+      }
     }
 
     for (const exp of explosions) {
@@ -475,6 +587,7 @@ export function createArkanoidGame(
         Math.floor((exp.elapsed / EXPLOSION_DURATION) * 4),
         3,
       );
+      glow(exp.color as ArkanoidSpriteRole);
       drawFrame(
         ctx,
         EXPLOSION_FRAMES[exp.color][frameIndex],
@@ -483,13 +596,18 @@ export function createArkanoidGame(
         exp.w,
         exp.h,
       );
+      clearGlow();
     }
 
+    glow("paddle");
     drawSprite(ctx, "paddle", paddle.x, paddle.y, paddle.w, paddle.h);
+    clearGlow();
+    glow("ball");
     drawSprite(ctx, "ball", ball.x, ball.y, ball.w, ball.h);
+    clearGlow();
 
     if (gameState === "playing") {
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = palette().hudText;
       ctx.font = "bold 18px monospace";
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
@@ -498,10 +616,12 @@ export function createArkanoidGame(
       ctx.fillText("Nivel: " + currentLevel, canvas.width / 2, 10);
       const ballSize = 16;
       const ballSpacing = 4;
+      glow("ball");
       for (let i = 0; i < lives; i++) {
         const bx = canvas.width - 10 - (lives - i) * (ballSize + ballSpacing);
         drawSprite(ctx, "ball", bx, 10, ballSize, ballSize);
       }
+      clearGlow();
     }
 
     if (gameState === "gameover") drawOverlay("GAME OVER");
@@ -561,5 +681,14 @@ export function createArkanoidGame(
     }
   }
 
-  return { start, stop, setPaused };
+  function setSkin(skin: SkinId) {
+    if (skin === activeSkin) return;
+    activeSkin = skin;
+    // Repintado inmediato con la hoja del nuevo skin: no toca board, score,
+    // vidas ni la posición de bola/paleta, y nunca dispara onGameOver — igual
+    // que setPaused, cambiar de skin no interrumpe la partida.
+    if (!stopped && ssLoaded) draw();
+  }
+
+  return { start, stop, setPaused, setSkin };
 }
