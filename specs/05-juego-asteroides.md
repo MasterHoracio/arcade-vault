@@ -27,6 +27,10 @@
 - Ajustes de balance/dificultad respecto al original (velocidades, puntos por tamaño, probabilidad de drop del power-up, duración de invencibilidad). Se porta tal cual, sin retocar constantes.
 - Botón "FIN" manual: se deja tal como está hoy (llama a `endGame()` directamente) como salida forzada opcional; no se elimina ni se le cambia comportamiento.
 
+> Nota (2026-09-03): `duelo-pixel`, `gloton`, `invasores`, `ranaria` y
+> `rocas` se eliminaron del catálogo; las menciones a ellos en esta spec
+> son históricas.
+
 ## Modelo de datos
 
 No se introduce persistencia nueva — `av_scores` se sigue usando exactamente igual (`{ game: "asteroides", score, name, at }`). Se agrega un tipo interno, no persistido, para el estado sincronizado entre el engine y el HUD de React:

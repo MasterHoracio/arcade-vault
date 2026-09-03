@@ -30,7 +30,7 @@
 - Controles táctiles/móviles dedicados (más allá del clic mantenido genérico ya descrito, que no es un control táctil optimizado con gestos).
 - Sonido o música.
 - Cálculo dinámico de `best`/`plays` desde `scores` — quedan estáticos como en el resto del catálogo (SPEC 06).
-- Sin cambios a los demás juegos de la biblioteca (`arkanoid`, `asteroides`, `serpentina`, `tetris`, `duelo-pixel`, `gloton`, `invasores`, `ranaria`, `rocas`). Siguen exactamente igual.
+- Sin cambios a los demás juegos de la biblioteca (`arkanoid`, `asteroides`, `serpentina`, `tetris`). Siguen exactamente igual.
 
 ## Modelo de datos
 
@@ -67,7 +67,7 @@ export function createAleteoGame(
 4. **`components/AleteoCanvas.tsx`** — Client component (`"use client"`) con `<canvas ref={canvasRef} width={800} height={600} style={{ width: "100%", height: "100%", display: "block" }} />`, mismo patrón que `SerpentinaCanvas.tsx`. Props: `{ paused: boolean; onStateChange: (s: AleteoHudState) => void; onGameOver: (score: number) => void }`. Un `useEffect` (deps `[]`) crea la instancia, la guarda en un ref y llama `.start()`; el cleanup llama `.stop()`. Un segundo `useEffect` (dep `[paused]`) llama `instance.setPaused(paused)`.
 5. **`lib/games/registry.ts`** — Agregar la entrada `aleteo: { Canvas: AleteoCanvas }` a `GAME_REGISTRY`. No se toca `PlayerClient.tsx` más allá de que ya lee del registro.
 6. **Assets** — ninguno; el ave y las franjas se dibujan con primitivas de canvas (círculo, rectángulos) y colores del tema, sin sprites.
-7. **Verificación final** — `npm run lint` y `npm run build` sin errores. Jugar manualmente `/juegos/aleteo/jugar`: mantener presionado `Espacio` y confirmar que el ave sube suavemente mientras se sostiene y cae por gravedad al soltar (curva continua, no salto discreto), cruzar varias franjas viendo el hueco moverse mientras se acercan y el puntaje subir de a 1, llegar a 8 franjas y confirmar que el nivel sube a 2, el scroll se acelera y el hueco se nota más angosto, chocar contra la parte sólida de una franja o tocar el techo/suelo y confirmar que se abre automáticamente el modal de fin con el puntaje final correcto, pulsar "PAUSA" y confirmar que el ave, las franjas y su oscilación se congelan, "REANUDAR" continúa sin saltos. Luego navegar a `/juegos/serpentina/jugar` y a un juego simulado (`/juegos/rocas/jugar`) y confirmar que ambos siguen funcionando exactamente igual que antes.
+7. **Verificación final** — `npm run lint` y `npm run build` sin errores. Jugar manualmente `/juegos/aleteo/jugar`: mantener presionado `Espacio` y confirmar que el ave sube suavemente mientras se sostiene y cae por gravedad al soltar (curva continua, no salto discreto), cruzar varias franjas viendo el hueco moverse mientras se acercan y el puntaje subir de a 1, llegar a 8 franjas y confirmar que el nivel sube a 2, el scroll se acelera y el hueco se nota más angosto, chocar contra la parte sólida de una franja o tocar el techo/suelo y confirmar que se abre automáticamente el modal de fin con el puntaje final correcto, pulsar "PAUSA" y confirmar que el ave, las franjas y su oscilación se congelan, "REANUDAR" continúa sin saltos. Luego navegar a `/juegos/serpentina/jugar` y a `/juegos/tetris/jugar` y confirmar que ambos siguen funcionando exactamente igual que antes.
 
 ## Criterios de aceptación
 

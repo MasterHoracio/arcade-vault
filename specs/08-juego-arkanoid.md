@@ -32,6 +32,10 @@
 - Cambios a los demás 6 juegos simulados de la biblioteca (`duelo-pixel`, `gloton`, `invasores`, `ranaria`, `rocas`, `serpentina`). Siguen con la simulación decorativa actual sin ningún cambio.
 - Cálculo dinámico de `best`/`plays` desde `scores` — quedan estáticos como en el resto del catálogo (SPEC 06).
 
+> Nota (2026-09-03): `duelo-pixel`, `gloton`, `invasores`, `ranaria` y
+> `rocas` se eliminaron del catálogo; las menciones a ellos en esta spec
+> son históricas.
+
 ## Modelo de datos
 
 ```ts

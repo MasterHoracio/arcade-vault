@@ -31,6 +31,10 @@
 - Guardado automático de puntuación al terminar; sigue el flujo existente (iniciales + "GUARDAR PUNTUACIÓN" en el modal).
 - Cálculo dinámico de `best`/`plays` desde `scores` — quedan estáticos como en el resto del catálogo (SPEC 06).
 
+> Nota (2026-09-03): `duelo-pixel`, `gloton`, `invasores`, `ranaria` y
+> `rocas` se eliminaron del catálogo; las menciones a ellos en esta spec
+> son históricas.
+
 ## Modelo de datos
 
 ```ts

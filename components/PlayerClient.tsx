@@ -16,12 +16,11 @@ import {
 
 export default function PlayerClient({ game }: { game: Game }) {
   const router = useRouter();
-  const entry = GAME_REGISTRY[game.id];
+  // page.tsx ya valida que game.id esté en GAME_REGISTRY antes de renderizar.
+  const entry = GAME_REGISTRY[game.id]!;
 
   const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
   const [score, setScore] = useState(0);
-  const [lives] = useState(3);
-  const level = Math.floor(score / 2500) + 1;
   const [hud, setHud] = useState<HudFields>({
     score: 0,
     lives: 3,
@@ -49,15 +48,6 @@ export default function PlayerClient({ game }: { game: Game }) {
     setSkin(next);
     writeSkin(next);
   };
-
-  useEffect(() => {
-    if (entry || over || paused) return;
-    const t = setInterval(
-      () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
-      220,
-    );
-    return () => clearInterval(t);
-  }, [entry, over, paused]);
 
   const endGame = () => setOver(true);
   const restart = () => {
@@ -96,27 +86,21 @@ export default function PlayerClient({ game }: { game: Game }) {
           </div>
           <div className="hud-stat">
             <div className="l">Puntuación</div>
-            <div className="v">
-              {(entry ? hud.score : score).toLocaleString("es-ES")}
-            </div>
+            <div className="v">{hud.score.toLocaleString("es-ES")}</div>
           </div>
           <div className="hud-stat lives">
             <div className="l">Vidas</div>
             <div className="v">
-              {entry
-                ? hud.lives !== undefined
-                  ? "♥ ".repeat(hud.lives).trim() || "—"
-                  : "—"
-                : "♥ ".repeat(lives).trim() || "—"}
+              {hud.lives !== undefined
+                ? "♥ ".repeat(hud.lives).trim() || "—"
+                : "—"}
             </div>
           </div>
           <div className="hud-stat level">
             <div className="l">Nivel</div>
-            <div className="v">
-              {String(entry ? hud.level : level).padStart(2, "0")}
-            </div>
+            <div className="v">{String(hud.level).padStart(2, "0")}</div>
           </div>
-          {entry && entry.skins.length > 1 && (
+          {entry.skins.length > 1 && (
             <div className="hud-stat">
               <div className="l">Skin</div>
               <select
@@ -152,26 +136,16 @@ export default function PlayerClient({ game }: { game: Game }) {
 
       <div className="crt" data-skin={skin}>
         <div className="crt-screen">
-          {entry ? (
-            <entry.Canvas
-              key={round}
-              paused={paused}
-              skin={skin}
-              onStateChange={setHud}
-              onGameOver={(finalScore) => {
-                setScore(finalScore);
-                endGame();
-              }}
-            />
-          ) : (
-            <div className="game-arena">
-              <div className="grid-floor"></div>
-              <div className="enemy e1"></div>
-              <div className="enemy e2"></div>
-              <div className="enemy e3"></div>
-              <div className="player-ship"></div>
-            </div>
-          )}
+          <entry.Canvas
+            key={round}
+            paused={paused}
+            skin={skin}
+            onStateChange={setHud}
+            onGameOver={(finalScore) => {
+              setScore(finalScore);
+              endGame();
+            }}
+          />
           {paused && (
             <div
               className="crt-content"
@@ -202,7 +176,7 @@ export default function PlayerClient({ game }: { game: Game }) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
-      {entry && <TouchControls config={entry.touchControls} />}
+      <TouchControls config={entry.touchControls} />
 
       {over && (
         <div className="modal-bd">

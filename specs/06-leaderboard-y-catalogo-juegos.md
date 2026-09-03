@@ -61,6 +61,10 @@ create index scores_game_id_score_idx on public.scores (game_id, score desc);
 
 Siembra de `games` (9 filas, mismos valores que `GAMES` en `lib/games.ts` hoy): `asteroides`, `bloque-buster`, `caida`, `serpentina`, `gloton`, `invasores`, `rocas`, `ranaria`, `duelo-pixel`, con sus columnas `title`/`short`/`long`/`cat`/`cover`/`color`/`best`/`plays` copiadas tal cual del archivo actual.
 
+> Nota (2026-09-03): `duelo-pixel`, `gloton`, `invasores`, `ranaria` y
+> `rocas` se eliminaron del catálogo; las menciones a ellos en esta spec
+> son históricas.
+
 Tipos TypeScript (`lib/games.ts`, ya existentes, sin cambios de forma):
 
 ```ts
