@@ -1,6 +1,7 @@
 // ===== lib/games/asteroids/engine.ts — puerto TS de references/started-games/02-asteroids/game.js =====
 
 import type { SkinId } from "@/lib/games/skins";
+import { ASTEROIDS_SKINS } from "./skins";
 
 export interface AsteroidsHudState {
   score: number;
@@ -17,7 +18,6 @@ export interface AsteroidsCallbacks {
 export function createAsteroidsGame(
   canvas: HTMLCanvasElement,
   callbacks: AsteroidsCallbacks,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   options?: { skin?: SkinId },
 ): {
   start: () => void;
@@ -28,6 +28,22 @@ export function createAsteroidsGame(
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
   const W = 800;
   const H = 600;
+
+  // ── Skin activo ───────────────────────────────────────────────────────────
+  let activeSkin: SkinId = options?.skin ?? "clasico";
+  const palette = () => ASTEROIDS_SKINS[activeSkin];
+
+  /** Aplica el halo del skin activo (0 en clasico/retro = sin cambio visual). */
+  function glow(color: string) {
+    const blur = palette().shadowBlur;
+    if (blur > 0) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = blur;
+    }
+  }
+  function clearGlow() {
+    ctx.shadowBlur = 0;
+  }
 
   // ── Input ─────────────────────────────────────────────────────────────────
   const keys: Record<string, boolean> = {};
@@ -86,10 +102,13 @@ export function createAsteroidsGame(
     }
 
     draw() {
-      ctx.fillStyle = "#fff";
+      const color = palette().bullet;
+      glow(color);
+      ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
       ctx.fill();
+      clearGlow();
     }
   }
 
@@ -150,7 +169,9 @@ export function createAsteroidsGame(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rot);
-      ctx.strokeStyle = "#fff";
+      const color = palette().asteroid;
+      glow(color);
+      ctx.strokeStyle = color;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = "round";
       ctx.beginPath();
@@ -192,15 +213,17 @@ export function createAsteroidsGame(
     draw() {
       if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
       const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
+      const color = palette().powerUp;
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(Math.PI / 4);
-      ctx.strokeStyle = "#0ff";
+      glow(color);
+      ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       const r = this.radius * pulse;
       ctx.strokeRect(-r, -r, r * 2, r * 2);
       ctx.restore();
-      ctx.fillStyle = "#0ff";
+      ctx.fillStyle = color;
       ctx.font = "bold 12px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -290,7 +313,9 @@ export function createAsteroidsGame(
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
-      ctx.strokeStyle = "#fff";
+      const skin = palette();
+      glow(skin.ship);
+      ctx.strokeStyle = skin.ship;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = "round";
 
@@ -309,7 +334,8 @@ export function createAsteroidsGame(
         ctx.moveTo(-8, -4);
         ctx.lineTo(-8 - rand(6, 14), 0);
         ctx.lineTo(-8, 4);
-        ctx.strokeStyle = "rgba(255, 130, 0, 0.85)";
+        glow(skin.thruster);
+        ctx.strokeStyle = skin.thruster;
         ctx.stroke();
       }
 
@@ -347,7 +373,7 @@ export function createAsteroidsGame(
 
     draw() {
       const alpha = this.ttl / this.life;
-      ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+      ctx.strokeStyle = `rgba(${palette().particleRgb},${alpha.toFixed(2)})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(this.x, this.y);
@@ -369,6 +395,7 @@ export function createAsteroidsGame(
   let deadTimer = 0;
   let powerUpSpawned = false;
   let killsSinceSpawn = 0;
+  let initialized = false; // true tras el primer initGame(): ya hay algo que repintar
 
   function spawnAsteroids(count: number) {
     const SAFE_DIST = 130;
@@ -394,6 +421,7 @@ export function createAsteroidsGame(
     lives = 3;
     level = 1;
     state = "playing";
+    initialized = true;
     spawnAsteroids(4);
   }
 
@@ -527,17 +555,20 @@ export function createAsteroidsGame(
 
   // ── Draw ──────────────────────────────────────────────────────────────────
   function drawOverlay(title: string, sub: string) {
+    const skin = palette();
     ctx.textAlign = "center";
-    ctx.fillStyle = "#fff";
+    glow(skin.overlayTitle);
+    ctx.fillStyle = skin.overlayTitle;
     ctx.font = "bold 46px monospace";
     ctx.fillText(title, W / 2, H / 2 - 18);
+    clearGlow();
     ctx.font = "18px monospace";
-    ctx.fillStyle = "rgba(255,255,255,0.65)";
+    ctx.fillStyle = skin.overlaySubtitle;
     ctx.fillText(sub, W / 2, H / 2 + 22);
   }
 
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = palette().background;
     ctx.fillRect(0, 0, W, H);
 
     particles.forEach((p) => p.draw());
@@ -594,10 +625,13 @@ export function createAsteroidsGame(
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function setSkin(_skin: SkinId) {
-    // TODO(skin-designer): solo "clasico" implementado — el look actual del
-    // juego es "clasico" por definición. "neon"/"retro" pendientes.
+  function setSkin(skin: SkinId) {
+    if (skin === activeSkin) return;
+    activeSkin = skin;
+    // Repinta con la paleta nueva sin tocar el estado de la partida
+    // (nave, asteroides, score, vidas). Si el juego aún no arrancó, el
+    // primer frame del loop ya usará el skin nuevo.
+    if (initialized) draw();
   }
 
   return { start, stop, setPaused, setSkin };
