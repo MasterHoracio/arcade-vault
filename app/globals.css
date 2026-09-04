@@ -818,6 +818,42 @@ a {
   filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.8));
 }
 
+.cover-frogger {
+  background:
+    linear-gradient(#141414 0 60%, transparent 60%),
+    linear-gradient(transparent 60%, #062a24 60% 92%, #0a3a1e 92% 100%),
+    var(--ink);
+}
+.cover-frogger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+      90deg,
+      var(--yellow) 0 22px,
+      transparent 22px 40px
+    )
+    0 28% / 100% 3px no-repeat;
+  opacity: 0.65;
+}
+.cover-frogger::before {
+  content: "";
+  position: absolute;
+  left: 46%;
+  top: 66%;
+  width: 34px;
+  height: 24px;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    var(--green) 0 60%,
+    transparent 61%
+  );
+  box-shadow:
+    -9px -10px 0 -3px var(--green),
+    9px -10px 0 -3px var(--green);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
+}
+
 /* ===== detail screen ===== */
 .av-detail {
   display: grid;

@@ -78,6 +78,7 @@ Skills disponibles:
 
 - `/spec` y `/spec-impl` (`.agents/skills/`) — del pack `Klerith/fernando-skills`, versionados en `skills-lock.json`. Son upstream: no los edites a mano.
 - `/spec-juego` (`.claude/skills/spec-juego/`) — skill propia del proyecto. Especializa `/spec` para agregar un juego nuevo (engine, canvas, HUD, cover, fila en `games`, leaderboard). Su `integracion.md` documenta los 6 puntos de cableado de un juego. Úsala antes de escribir el código de un juego nuevo.
+- `/spec-impl-game` (`.claude/skills/spec-impl-game/`) — skill propia del proyecto. Envuelve `/spec-impl` para specs de juego: implementa la spec y, al terminar, encadena los agentes `skin-designer` y `mobile-porter` sobre el juego nuevo, en ese orden y nunca en paralelo.
 
 ## Skills
 

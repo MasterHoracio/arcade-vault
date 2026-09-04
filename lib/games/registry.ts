@@ -1,5 +1,6 @@
 import ArkanoidCanvas from "@/components/ArkanoidCanvas";
 import AsteroidsCanvas from "@/components/AsteroidsCanvas";
+import FroggerCanvas from "@/components/FroggerCanvas";
 import SerpentinaCanvas from "@/components/SerpentinaCanvas";
 import TetrisCanvas from "@/components/TetrisCanvas";
 import type { SkinId } from "@/lib/games/skins";
@@ -51,6 +52,11 @@ export const GAME_REGISTRY: Record<string, GameRegistryEntry> = {
     Canvas: AsteroidsCanvas,
     skins: ["clasico", "neon", "retro"],
     touchControls: { left: LEFT, right: RIGHT, up: UP, a: SPACE },
+  },
+  frogger: {
+    Canvas: FroggerCanvas,
+    skins: ["clasico", "neon", "retro"],
+    touchControls: { up: UP, down: DOWN, left: LEFT, right: RIGHT },
   },
   serpentina: {
     Canvas: SerpentinaCanvas,
