@@ -103,7 +103,7 @@ No se introducen nuevas tablas ni tipos TypeScript — se reutilizan `GameRow` y
    Tipos locales (no exportados):
 
    ```ts
-   type Direction = 'up' | 'down' | 'left' | 'right';
+   type Direction = "up" | "down" | "left" | "right";
    interface Lane {
      row: number;
      speed: number;
@@ -113,7 +113,7 @@ No se introducen nuevas tablas ni tipos TypeScript — se reutilizan `GameRow` y
    interface Entity {
      col: number;
      width: number;
-     type: 'car' | 'truck' | 'log' | 'turtle';
+     type: "car" | "truck" | "log" | "turtle";
      submerged?: boolean;
    }
    interface Frog {
@@ -216,6 +216,42 @@ No se introducen nuevas tablas ni tipos TypeScript — se reutilizan `GameRow` y
 - [ ] El botón "JUGAR DE NUEVO" reinicia la partida desde cero (nuevo `gameKey`).
 - [ ] El score guardado aparece en `/games/frogger` y en `/hall-of-fame` al recargar.
 - [ ] `npm run build` completa sin errores de TypeScript.
+
+---
+
+## Nota de implementación (post-port al patrón estándar)
+
+Esta spec se implementó primero al pie de la letra en la rama
+`spec-01-frogger-core` (componente monolítico `components/games/FroggerGame.tsx`
+
+- ruta propia `app/games/frogger/play`), pero eso dejaba a Frogger fuera del
+  patrón del resto del catálogo — sin `GAME_REGISTRY`, sin skins, sin
+  `TouchControls`. A pedido del usuario se portó al patrón estándar
+  (`.claude/skills/spec-juego/integracion.md`) en la misma rama, con estas
+  desviaciones deliberadas sobre el texto literal de arriba:
+
+* Arquitectura: `lib/games/frogger/engine.ts` (factory `createFroggerGame`,
+  patrón de `lib/games/serpentina/engine.ts`) + `components/FroggerCanvas.tsx`
+  - entrada en `lib/games/registry.ts`, en vez del componente monolítico con 4
+    callbacks separados. `onScoreChange`/`onLivesChange`/`onLevelChange`
+    colapsan en un único `onStateChange({ score, lives, level })`.
+* Ruta jugable: `/juegos/frogger/jugar` (vía `PlayerClient`, como todos los
+  demás juegos) en vez de `/games/frogger/play`. La página dedicada se borró.
+* `color` de la fila en Supabase: `green`, no `lime` (el CHECK constraint de
+  `games.color` no admite `lime`).
+* Nombre del jugador: se lee de `localStorage.av_user` (como el resto del
+  catálogo, vía `PlayerClient`), no de `av_player_name`.
+* `setPaused` cancela/reanuda el `requestAnimationFrame` (patrón del resto de
+  los engines) en vez de que `update()` retorne temprano manteniendo `draw()`
+  activo — el resultado en pantalla es el mismo (frame congelado + overlay de
+  pausa de `PlayerClient`).
+* Los 3 skins (`clasico`/`neon`/`retro`) se implementaron en el mismo port,
+  en `lib/games/frogger/skins.ts` — ver `references/game-with-themes.md`.
+
+El resto de la mecánica, el scoring y el look (`clasico`) no cambiaron. Falta
+verificar los criterios de aceptación de arriba uno por uno contra el juego
+en el navegador y decidir el commit — no se hizo automáticamente.
+
 - [ ] Ninguna ruta existente devuelve 500.
 
 ---
