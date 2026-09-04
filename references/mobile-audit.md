@@ -14,6 +14,29 @@ actualiza después de implementar. Puedes editarlo a mano.
     visibles bajo `@media (max-width: 768px)`.
   - No cubre el resto del chasis del Reproductor (`.crt`, `.player-hud`,
     `.crt-bottom`, modal de fin de partida) — ver pendiente abajo.
+- [x] **Reproductor — controles táctiles en Frogger** (`lib/games/registry.ts`,
+      `lib/games/frogger/engine.ts`, `components/TouchControls.tsx`) —
+      auditoría (sin código nuevo) · 2026-09-04
+  - Ya venía cableado igual que serpentina: `registry.ts` define
+    `touchControls: { up, down, left, right }` (mismos slots, sin `a`/`b`),
+    `PlayerClient` lo renderiza sin condicional por `game.id`, y el engine
+    escucha `ArrowUp/Down/Left/Right` en `window` con `keyMap` sobre
+    `e.key` — coincide exactamente con las teclas sintéticas que despacha
+    `TouchControls` (`document.dispatchEvent(new KeyboardEvent(...))`, hace
+    bubble hasta `window`). Verificado leyendo código, no hace falta tocar
+    `engine.ts` (regla dura respetada).
+  - `TouchControls` se renderiza como hermano de `.crt` en el flujo normal
+    del documento (no absolute-position sobre el canvas), así que no tapa
+    el tablero ni las casas/metas de Frogger en ningún ancho — esto es
+    estructural al componente compartido, no depende del canvas de cada
+    juego.
+  - El canvas de Frogger es 640×560 (ratio ≈1.14:1) dentro de
+    `.crt-screen` con `aspect-ratio: 4/3` (≈1.33:1): queda con
+    letterboxing lateral, más ajustado que el peor caso ya documentado
+    (Tetris 300×600, ratio 0.5) y sin overflow. No requirió cambios.
+  - No se encontraron hallazgos que arreglar; no se tocó código. La
+    entrada "Reproductor — chasis" (pendiente, abajo) sigue abierta y no
+    es específica de Frogger — no se resuelve en esta corrida.
 
 ## Pendientes
 
