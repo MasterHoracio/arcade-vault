@@ -255,6 +255,7 @@ export default function FroggerGame({
     let prevScore = state.score;
     let prevLives = state.lives;
     let prevLevel = state.level;
+    let raf = 0;
 
     function killFrog() {
       state.lives -= 1;
@@ -262,6 +263,7 @@ export default function FroggerGame({
       if (state.lives <= 0) {
         callbacksRef.current.onGameOver(state.score);
         state.over = true;
+        cancelAnimationFrame(raf);
         return;
       }
       state.frog.col = Math.floor(COLS / 2);
@@ -529,7 +531,6 @@ export default function FroggerGame({
       ctx.fillRect(0, 0, CANVAS_W * frac, 4);
     }
 
-    let raf = 0;
     let last = performance.now();
     function loop(now: number) {
       const dt = now - last;
