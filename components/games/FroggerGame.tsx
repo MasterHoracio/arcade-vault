@@ -121,31 +121,47 @@ function buildLanes(level: number): Lane[] {
   return lanes;
 }
 
-/**
- * ¿La rana choca con un vehículo en su carril actual?
- * Implementación completa en el Paso 5.
- */
-function checkRoadCollision(_frog: Frog, _lanes: Lane[]): boolean {
-  return false;
+/** ¿La rana choca con un vehículo en su carril actual? */
+function checkRoadCollision(frog: Frog, lanes: Lane[]): boolean {
+  const lane = lanes.find((l) => l.row === frog.row);
+  if (!lane) return false;
+  return lane.entities.some(
+    (e) => frog.col >= e.col && frog.col < e.col + e.width,
+  );
 }
 
 /**
  * Entidad de río que sostiene a la rana en su carril actual, o `null` si no
- * hay ninguna (incluye tortugas sumergidas). Implementación completa en el
- * Paso 5.
+ * hay ninguna (incluye tortugas sumergidas).
  */
-function getSupport(_frog: Frog, _lanes: Lane[]): Entity | null {
-  return null;
+function getSupport(frog: Frog, lanes: Lane[]): Entity | null {
+  const lane = lanes.find((l) => l.row === frog.row);
+  if (!lane) return null;
+  const entity = lane.entities.find(
+    (e) => frog.col >= e.col && frog.col < e.col + e.width,
+  );
+  if (!entity) return null;
+  if (entity.type === "turtle" && entity.submerged) return null;
+  return entity;
 }
+
+// Cada boca ocupa 2 de las 16 columnas, separadas por 1 columna de hueco
+// (hueco · boca · hueco · boca · hueco · boca · hueco · boca · hueco · boca · hueco).
+const GOAL_SPANS = [0, 1, 2, 3, 4].map((i) => ({ start: 1 + i * 3, width: 2 }));
 
 /**
  * Resuelve el aterrizaje de la rana en la fila de metas: marca la boca
  * correspondiente si estaba libre (`true`) o señala muerte si ya estaba
- * ocupada / la columna no cae en ninguna boca (`false`). Implementación
- * completa en el Paso 5.
+ * ocupada / la columna no cae en ninguna boca (`false`).
  */
-function checkGoal(_frog: Frog, _goals: boolean[]): boolean {
-  return false;
+function checkGoal(frog: Frog, goals: boolean[]): boolean {
+  const index = GOAL_SPANS.findIndex(
+    (g) => frog.col >= g.start && frog.col < g.start + g.width,
+  );
+  if (index === -1) return false;
+  if (goals[index]) return false;
+  goals[index] = true;
+  return true;
 }
 
 const JUMP_MS = 120;
@@ -453,27 +469,19 @@ export default function FroggerGame({
         }
       }
 
-      const goalW = (COLS / 5) * CELL;
-      for (let i = 0; i < 5; i++) {
-        const x = i * goalW;
+      GOAL_SPANS.forEach((g, i) => {
+        const x = g.start * CELL;
+        const w = g.width * CELL;
         ctx.strokeStyle = "#c9a227";
         ctx.lineWidth = 2;
-        ctx.strokeRect(x + 4, 4, goalW - 8, CELL - 8);
+        ctx.strokeRect(x + 2, 4, w - 4, CELL - 8);
         if (state.goals[i]) {
           ctx.fillStyle = "#2fbf4f";
           ctx.beginPath();
-          ctx.ellipse(
-            x + goalW / 2,
-            4 + (CELL - 8) / 2,
-            12,
-            10,
-            0,
-            0,
-            Math.PI * 2,
-          );
+          ctx.ellipse(x + w / 2, 4 + (CELL - 8) / 2, 12, 10, 0, 0, Math.PI * 2);
           ctx.fill();
         }
-      }
+      });
 
       const frog = state.frog;
       const t = frog.animating ? frog.animT / JUMP_MS : 1;
