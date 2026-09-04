@@ -32,14 +32,9 @@ const ROW_ROAD_TOP = 8;
 const ROW_ROAD_BOT = 12;
 const ROW_START = 13;
 
-// Ciclo de inmersión de las tortugas: 3s visibles / 1.5s bajo el agua.
-const TURTLE_VISIBLE_MS = 3000;
-const TURTLE_SUBMERGED_MS = 1500;
-const TURTLE_CYCLE_MS = TURTLE_VISIBLE_MS + TURTLE_SUBMERGED_MS;
-
 const JUMP_MS = 120;
-const ROUND_TIME_BASE_MS = 15000;
-const ROUND_TIME_MIN_MS = 6000;
+const ROUND_TIME_BASE_MS = 30000;
+const ROUND_TIME_MIN_MS = 20000;
 const ROUND_TIME_STEP_MS = 1000;
 const POINTS_PER_ADVANCE = 10;
 const POINTS_GOAL = 50;
@@ -61,9 +56,6 @@ interface Entity {
   col: number;
   width: number;
   type: "car" | "truck" | "log" | "turtle";
-  submerged?: boolean;
-  // Tiempo transcurrido (ms) dentro del ciclo de inmersión; solo tortugas.
-  submergeT?: number;
 }
 
 interface Frog {
@@ -71,8 +63,11 @@ interface Frog {
   row: number;
   animating: boolean;
   animT: number;
-  targetCol: number;
-  targetRow: number;
+  // Punto de partida del salto, solo para interpolar el dibujo: la posición
+  // lógica (col/row) se confirma al instante en que se decide el salto, no
+  // al terminar la animación (ver update()).
+  fromCol: number;
+  fromRow: number;
 }
 
 /**
@@ -85,7 +80,7 @@ function buildLanes(level: number): Lane[] {
   const lanes: Lane[] = [];
 
   const roadRows = [8, 9, 10, 11, 12];
-  const roadBaseSpeeds = [1.5, 2.2, 3, 3.6, 4];
+  const roadBaseSpeeds = [0.7, 1, 1.4, 1.7, 1.9];
   roadRows.forEach((row, i) => {
     const dir: 1 | -1 = i % 2 === 0 ? 1 : -1;
     const speed = roadBaseSpeeds[i] * levelMult;
@@ -105,7 +100,7 @@ function buildLanes(level: number): Lane[] {
   });
 
   const riverRows = [1, 2, 3, 4, 5, 6];
-  const riverBaseSpeeds = [1, 1.5, 2, 2.5, 3, 1.2];
+  const riverBaseSpeeds = [0.5, 0.7, 1, 1.2, 1.4, 0.6];
   const riverTypes: Array<"log" | "turtle"> = [
     "log",
     "turtle",
@@ -126,10 +121,6 @@ function buildLanes(level: number): Lane[] {
           ? 2 + Math.floor(Math.random() * 3)
           : 2 + Math.floor(Math.random() * 2);
       const entity: Entity = { col, width, type };
-      if (type === "turtle") {
-        entity.submerged = false;
-        entity.submergeT = Math.random() * TURTLE_CYCLE_MS;
-      }
       entities.push(entity);
       // Hueco de al menos 1 celda.
       col += width + 1 + Math.floor(Math.random() * 2);
@@ -151,17 +142,16 @@ function checkRoadCollision(frog: Frog, lanes: Lane[]): boolean {
 
 /**
  * Entidad de río que sostiene a la rana en su carril actual, o `null` si no
- * hay ninguna (incluye tortugas sumergidas).
+ * hay ninguna.
  */
 function getSupport(frog: Frog, lanes: Lane[]): Entity | null {
   const lane = lanes.find((l) => l.row === frog.row);
   if (!lane) return null;
-  const entity = lane.entities.find(
-    (e) => frog.col >= e.col && frog.col < e.col + e.width,
+  return (
+    lane.entities.find(
+      (e) => frog.col >= e.col && frog.col < e.col + e.width,
+    ) ?? null
   );
-  if (!entity) return null;
-  if (entity.type === "turtle" && entity.submerged) return null;
-  return entity;
 }
 
 // Cada boca ocupa 2 de las 16 columnas, separadas por 1 columna de hueco
@@ -225,8 +215,8 @@ export function createFroggerGame(
       row: ROW_START,
       animating: false,
       animT: 0,
-      targetCol: Math.floor(COLS / 2),
-      targetRow: ROW_START,
+      fromCol: Math.floor(COLS / 2),
+      fromRow: ROW_START,
     };
     lanes = buildLanes(1);
     goals = [false, false, false, false, false];
@@ -240,6 +230,15 @@ export function createFroggerGame(
     gameOverFired = false;
   }
 
+  function respawnFrog() {
+    frog.col = Math.floor(COLS / 2);
+    frog.row = ROW_START;
+    frog.animating = false;
+    frog.fromCol = frog.col;
+    frog.fromRow = frog.row;
+    bestRowThisRound = ROW_START;
+  }
+
   function killFrog() {
     lives -= 1;
     if (lives <= 0) {
@@ -250,22 +249,12 @@ export function createFroggerGame(
       }
       return;
     }
-    frog.col = Math.floor(COLS / 2);
-    frog.row = ROW_START;
-    frog.animating = false;
-    frog.targetCol = frog.col;
-    frog.targetRow = frog.row;
-    bestRowThisRound = ROW_START;
+    respawnFrog();
     roundTimeLeftMs = roundTimeForLevel(level);
   }
 
   function completeRound() {
-    frog.col = Math.floor(COLS / 2);
-    frog.row = ROW_START;
-    frog.animating = false;
-    frog.targetCol = frog.col;
-    frog.targetRow = frog.row;
-    bestRowThisRound = ROW_START;
+    respawnFrog();
     goals = [false, false, false, false, false];
     level += 1;
     lanes = buildLanes(level);
@@ -293,19 +282,19 @@ export function createFroggerGame(
 
     for (const lane of lanes) {
       for (const entity of lane.entities) {
-        entity.col += (lane.speed * lane.dir * dt) / 16;
+        // lane.speed está en px/frame (a 60 fps, ~16ms/frame); entity.col es
+        // columnas, no píxeles, así que además de pasar de "por frame" a
+        // "por ms" hay que dividir por CELL para pasar de píxeles a columnas.
+        entity.col += (lane.speed * lane.dir * dt) / (16 * CELL);
         if (lane.dir === 1 && entity.col > COLS) {
           entity.col = -entity.width;
         } else if (lane.dir === -1 && entity.col < -entity.width) {
           entity.col = COLS;
         }
-        if (entity.type === "turtle") {
-          entity.submergeT = ((entity.submergeT ?? 0) + dt) % TURTLE_CYCLE_MS;
-          entity.submerged = entity.submergeT >= TURTLE_VISIBLE_MS;
-        }
       }
     }
 
+    let justCommitted = false;
     if (!frog.animating && pendingDir) {
       let targetCol = frog.col;
       let targetRow = frog.row;
@@ -317,17 +306,17 @@ export function createFroggerGame(
       targetRow = Math.max(ROW_GOALS, Math.min(ROW_START, targetRow));
       pendingDir = null;
       if (targetCol !== frog.col || targetRow !== frog.row) {
-        frog.animating = true;
-        frog.animT = 0;
-        frog.targetCol = targetCol;
-        frog.targetRow = targetRow;
-      }
-    } else if (frog.animating) {
-      frog.animT += dt;
-      if (frog.animT >= JUMP_MS) {
-        frog.animating = false;
-        frog.col = frog.targetCol;
-        frog.row = frog.targetRow;
+        // La posición lógica se confirma AHORA, con las entidades tal como
+        // el jugador las vio al presionar la tecla. Si el chequeo se
+        // dejara para cuando termina la animación de salto (JUMP_MS
+        // después), un tronco que en ese instante ya se movió te mata por
+        // "no soporte" aunque hayas saltado bien — y cuanto más rápido el
+        // nivel, más seguido pasa. La animación de abajo es solo visual.
+        const fromCol = frog.col;
+        const fromRow = frog.row;
+        frog.col = targetCol;
+        frog.row = targetRow;
+        justCommitted = true;
 
         if (frog.row < bestRowThisRound) {
           bestRowThisRound = frog.row;
@@ -343,28 +332,57 @@ export function createFroggerGame(
             score +=
               POINTS_GOAL +
               Math.round((roundTimeLeftMs / 1000) * TIME_BONUS_MULT);
-            if (goals.every(Boolean)) completeRound();
+            if (goals.every(Boolean)) {
+              completeRound();
+            } else {
+              respawnFrog();
+              roundTimeLeftMs = roundTimeForLevel(level);
+            }
           } else {
             killFrog();
           }
         }
+
+        // Si seguimos vivos y en la celda destino (killFrog/completeRound/
+        // respawnFrog ya habrían reposicionado a la rana), arma el tween
+        // cosmético del salto.
+        if (
+          gameState === "playing" &&
+          frog.col === targetCol &&
+          frog.row === targetRow
+        ) {
+          frog.animating = true;
+          frog.animT = 0;
+          frog.fromCol = fromCol;
+          frog.fromRow = fromRow;
+        }
+      }
+    } else if (frog.animating) {
+      frog.animT += dt;
+      if (frog.animT >= JUMP_MS) {
+        frog.animating = false;
       }
     }
 
-    if (
-      gameState === "playing" &&
-      !frog.animating &&
-      frog.row >= ROW_RIVER_TOP &&
-      frog.row <= ROW_RIVER_BOT
-    ) {
-      const support = getSupport(frog, lanes);
-      if (!support) {
-        killFrog();
-      } else {
-        const lane = lanes.find((l) => l.row === frog.row);
-        if (lane) {
-          frog.col += (lane.speed * lane.dir * dt) / 16;
-          if (frog.col < 0 || frog.col > COLS - 1) killFrog();
+    // No se guarda con `!frog.animating`: esa bandera es puramente visual
+    // (ver comentario arriba), pero un tronco sigue arrastrando a la rana, y
+    // un auto la puede alcanzar, durante todo el tween del salto — si este
+    // chequeo se pausara mientras el salto se anima, al terminar el tween
+    // (JUMP_MS después) el tronco ya se movió sin la rana encima y la
+    // "suelta" de golpe aunque el aterrizaje haya sido válido.
+    if (gameState === "playing" && !justCommitted) {
+      if (frog.row >= ROW_ROAD_TOP && frog.row <= ROW_ROAD_BOT) {
+        if (checkRoadCollision(frog, lanes)) killFrog();
+      } else if (frog.row >= ROW_RIVER_TOP && frog.row <= ROW_RIVER_BOT) {
+        const support = getSupport(frog, lanes);
+        if (!support) {
+          killFrog();
+        } else {
+          const lane = lanes.find((l) => l.row === frog.row);
+          if (lane) {
+            frog.col += (lane.speed * lane.dir * dt) / (16 * CELL);
+            if (frog.col < 0 || frog.col > COLS - 1) killFrog();
+          }
         }
       }
     }
@@ -421,24 +439,14 @@ export function createFroggerGame(
       ctx.lineTo(x + w - 4, y + CELL - 12);
       ctx.stroke();
     } else if (entity.type === "turtle") {
-      if (entity.submerged) {
-        ctx.strokeStyle = palette.turtleSubmerged;
-        ctx.lineWidth = 1;
-        for (let i = 0; i < entity.width; i++) {
-          ctx.beginPath();
-          ctx.arc(x + i * CELL + CELL / 2, y + CELL / 2, 12, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      } else {
-        glow();
-        ctx.fillStyle = palette.turtleVisible;
-        for (let i = 0; i < entity.width; i++) {
-          ctx.beginPath();
-          ctx.arc(x + i * CELL + CELL / 2, y + CELL / 2, 14, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        clearGlow();
+      glow();
+      ctx.fillStyle = palette.turtleVisible;
+      for (let i = 0; i < entity.width; i++) {
+        ctx.beginPath();
+        ctx.arc(x + i * CELL + CELL / 2, y + CELL / 2, 14, 0, Math.PI * 2);
+        ctx.fill();
       }
+      clearGlow();
     }
   }
 
@@ -477,10 +485,10 @@ export function createFroggerGame(
 
     const t = frog.animating ? frog.animT / JUMP_MS : 1;
     const drawCol = frog.animating
-      ? frog.col + (frog.targetCol - frog.col) * t
+      ? frog.fromCol + (frog.col - frog.fromCol) * t
       : frog.col;
     const drawRow = frog.animating
-      ? frog.row + (frog.targetRow - frog.row) * t
+      ? frog.fromRow + (frog.row - frog.fromRow) * t
       : frog.row;
     const fx = drawCol * CELL + CELL / 2;
     const fy = drawRow * CELL + CELL / 2;
