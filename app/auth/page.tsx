@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 const NICKNAME_PATTERN = /^[A-Z0-9_]{3,10}$/;
@@ -199,6 +200,18 @@ export default function AuthPage() {
                 : "CREAR Y JUGAR"}
           </button>
         </form>
+
+        {tab === "in" && (
+          <div style={{ marginTop: 10, textAlign: "center" }}>
+            <Link
+              className="mono"
+              style={{ fontSize: 11, color: "var(--ink-faint)" }}
+              href="/auth/recuperar"
+            >
+              ¿OLVIDASTE TU CONTRASEÑA?
+            </Link>
+          </div>
+        )}
 
         <div className="auth-divider">O CONTINÚA CON</div>
         <div className="social">
