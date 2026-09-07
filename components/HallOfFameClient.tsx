@@ -5,25 +5,13 @@ import { useRouter } from "next/navigation";
 import type { Game, ScoreRow } from "@/lib/games";
 import { createClient } from "@/lib/supabase/client";
 import { getTopScores } from "@/lib/supabase/queries";
-
-interface AvUser {
-  name: string;
-}
+import { useSession } from "@/components/SessionProvider";
 
 export default function HallOfFameClient({ games }: { games: Game[] }) {
   const router = useRouter();
+  const { user } = useSession();
   const [tab, setTab] = useState(games[0].id);
-  const [user, setUser] = useState<AvUser | null>(null);
   const [rows, setRows] = useState<ScoreRow[]>([]);
-
-  useEffect(() => {
-    try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUser(JSON.parse(localStorage.getItem("av_user") || "null"));
-    } catch {
-      // no-op: keep no session
-    }
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,10 +22,6 @@ export default function HallOfFameClient({ games }: { games: Game[] }) {
       cancelled = true;
     };
   }, [tab]);
-
-  const game = games.find((g) => g.id === tab)!;
-  const youRank = user ? Math.floor(8 + (tab.length % 4)) : null;
-  const youScore = user ? rows[5]?.score - 2400 : null;
 
   return (
     <div className="av-hall fade-in">
@@ -116,47 +100,31 @@ export default function HallOfFameClient({ games }: { games: Game[] }) {
             SIN PUNTUACIONES TODAVÍA · SÉ EL PRIMERO
           </div>
         ) : (
-          rows.map((r, i) => (
-            <div
-              key={r.name + i}
-              className={
-                "tr" +
-                (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "")
-              }
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
-              <div className="pl">{r.name}</div>
-              <div className="sc">{r.score.toLocaleString("es-ES")}</div>
-              <div className="dt">{r.date}</div>
-            </div>
-          ))
-        )}
-        {user && (
-          <>
-            <div className="tr you-label">▸ TU MEJOR MARCA EN {game.title}</div>
-            <div
-              className="tr you"
-              style={{ animationDelay: `${rows.length * 50 + 50}ms` }}
-            >
-              <div className="rk" style={{ color: "var(--yellow)" }}>
-                #{String(youRank).padStart(2, "0")}
-              </div>
-              <div className="pl" style={{ color: "var(--yellow)" }}>
-                {user.name}
-              </div>
+          rows.map((r, i) => {
+            const isYou = user?.nickname === r.name;
+            return (
               <div
-                className="sc"
-                style={{
-                  color: "var(--yellow)",
-                  textShadow: "0 0 6px rgba(245,255,0,0.5)",
-                }}
+                key={r.name + i}
+                className={
+                  "tr" +
+                  (i === 0
+                    ? " top1"
+                    : i === 1
+                      ? " top2"
+                      : i === 2
+                        ? " top3"
+                        : "") +
+                  (isYou ? " you" : "")
+                }
+                style={{ animationDelay: `${i * 50}ms` }}
               >
-                {(youScore || 9999).toLocaleString("es-ES")}
+                <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
+                <div className="pl">{r.name}</div>
+                <div className="sc">{r.score.toLocaleString("es-ES")}</div>
+                <div className="dt">{r.date}</div>
               </div>
-              <div className="dt">11/05/2026</div>
-            </div>
-          </>
+            );
+          })
         )}
       </div>
 
