@@ -72,9 +72,18 @@ export default function Nav() {
           <span>CRÉDITOS · 03</span>
         </div>
         {user ? (
-          <button className="btn ghost auth-btn" onClick={handleSignOut}>
-            {user.nickname ?? user.email} ▾
-          </button>
+          <>
+            <div
+              className="player-chip"
+              title={user.nickname ?? user.email ?? ""}
+            >
+              <span className="tag">P1</span>
+              <span className="name">{user.nickname ?? user.email}</span>
+            </div>
+            <button className="btn ghost auth-btn" onClick={handleSignOut}>
+              Cerrar Sesión
+            </button>
+          </>
         ) : (
           <button className="btn auth-btn" onClick={() => go("/auth")}>
             Iniciar Sesión

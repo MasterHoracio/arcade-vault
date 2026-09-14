@@ -1,6 +1,6 @@
 # SPEC 12 — Autenticación y cuentas
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 06
 > **Fecha:** 2026-09-07
 > **Objetivo:** Reemplazar el mock de `/auth` (`localStorage` bajo `av_user`) por autenticación real de Supabase (email+contraseña, Google, GitHub) con perfiles de jugador (`profiles.nickname`), vinculando `scores` a un usuario real y cerrando el RLS deshabilitado en `games` y `scores`.

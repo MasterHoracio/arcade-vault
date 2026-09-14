@@ -285,8 +285,42 @@ a {
   background: radial-gradient(circle at 35% 35%, #fff8b0, #f5ff00 60%, #b0b800);
   box-shadow: 0 0 8px var(--yellow);
 }
+.av-nav .player-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 20px;
+  padding: 8px 14px;
+  background: var(--bg-3);
+  cursor: default;
+  clip-path: polygon(
+    8px 0,
+    100% 0,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    0 100%,
+    0 8px
+  );
+}
+.av-nav .player-chip .tag {
+  font-family: var(--pixel);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: var(--yellow);
+}
+.av-nav .player-chip .name {
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--cyan);
+  text-shadow: 0 0 8px rgba(0, 245, 255, 0.45);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .av-nav .auth-btn {
-  margin-left: 16px;
+  margin-left: 12px;
 }
 .av-nav .hamburger {
   display: none;
@@ -301,6 +335,12 @@ a {
   }
   .av-nav .coin-counter {
     display: none;
+  }
+  .av-nav .player-chip {
+    padding: 6px 10px;
+  }
+  .av-nav .player-chip .name {
+    max-width: 84px;
   }
   .av-nav .hamburger {
     display: inline-flex;
