@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+const PASSWORD_PATTERN =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]).{8,}$/;
+
 export default function NuevaContrasenaPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -16,8 +19,10 @@ export default function NuevaContrasenaPage() {
     e.preventDefault();
     setError(null);
 
-    if (password.length < 6) {
-      setError("LA CONTRASEÑA DEBE TENER AL MENOS 6 CARACTERES.");
+    if (!PASSWORD_PATTERN.test(password)) {
+      setError(
+        "LA CONTRASEÑA DEBE TENER MÍNIMO 8 CARACTERES, UNA MAYÚSCULA, UNA MINÚSCULA, UN DÍGITO Y UN SÍMBOLO.",
+      );
       return;
     }
     if (password !== confirm) {
