@@ -1,6 +1,6 @@
 # SPEC 13 — Medidas de seguridad básicas
 
-> **Estado:** Draft
+> **Estado:** Aprobado
 > **Depende de:** SPEC 04, SPEC 12
 > **Fecha:** 2026-09-14
 > **Objetivo:** Cerrar los hallazgos de `references/security/security-checklist.md` que siguen pendientes en el repo — revocar el `EXECUTE` público de las funciones `SECURITY DEFINER` de solo-trigger, agregar los 3 headers de seguridad HTTP en Next.js, validar en el cliente que toda contraseña nueva cumpla longitud y complejidad mínima, y proteger las rutas de autenticación en `proxy.ts` para que un usuario con sesión activa no vea las pantallas de login/registro, dejando el punto de extensión para rutas con auth forzada.
