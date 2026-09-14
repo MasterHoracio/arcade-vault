@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Game } from "@/lib/games";
 import { registerPlay, saveScore } from "@/app/actions/games";
 import { GAME_REGISTRY, type HudFields } from "@/lib/games/registry";
 import TouchControls from "@/components/TouchControls";
+import { useSession } from "@/components/SessionProvider";
 import {
   DEFAULT_SKIN,
   SKIN_LABELS,
@@ -16,6 +17,7 @@ import {
 
 export default function PlayerClient({ game }: { game: Game }) {
   const router = useRouter();
+  const { user } = useSession();
   // page.tsx ya valida que game.id esté en GAME_REGISTRY antes de renderizar.
   const entry = GAME_REGISTRY[game.id]!;
 
@@ -28,19 +30,13 @@ export default function PlayerClient({ game }: { game: Game }) {
   });
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState(false);
-  const [name, setName] = useState("INVITADO");
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [round, setRound] = useState(0);
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("av_user") || "null");
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (u?.name) setName(u.name);
-    } catch {
-      // no-op: keep default "INVITADO"
-    }
-
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSkin(readSkin());
   }, []);
 
@@ -58,21 +54,29 @@ export default function PlayerClient({ game }: { game: Game }) {
     setPaused(false);
     setOver(false);
     setSaved(false);
+    setSaveError(null);
     setRound((r) => r + 1);
   };
 
-  const handleSaveScore = async () => {
+  const handleSaveScore = useCallback(async () => {
+    setSaving(true);
+    setSaveError(null);
     try {
-      await saveScore({
-        gameId: game.id,
-        playerName: name,
-        score,
-      });
+      await saveScore({ gameId: game.id, score });
       setSaved(true);
     } catch {
-      // no-op: se muestra de nuevo el input-row para reintentar
+      setSaveError("NO SE PUDO GUARDAR TU PUNTUACIÓN. INTÉNTALO DE NUEVO.");
+    } finally {
+      setSaving(false);
     }
-  };
+  }, [game.id, score]);
+
+  useEffect(() => {
+    if (over && user && !saved && !saving && !saveError) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      handleSaveScore();
+    }
+  }, [over, user, saved, saving, saveError, handleSaveScore]);
 
   return (
     <div className="av-player fade-in">
@@ -81,7 +85,7 @@ export default function PlayerClient({ game }: { game: Game }) {
           <div className="hud-stat">
             <div className="l">Jugador</div>
             <div className="v" style={{ color: "var(--ink)" }}>
-              {name}
+              {user?.nickname ?? "INVITADO"}
             </div>
           </div>
           <div className="hud-stat">
@@ -184,21 +188,48 @@ export default function PlayerClient({ game }: { game: Game }) {
             <h2>FIN DEL JUEGO</h2>
             <div className="final-label">PUNTUACIÓN FINAL</div>
             <div className="final">{score.toLocaleString("es-ES")}</div>
-            {!saved ? (
+            {saved ? (
+              <div className="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+            ) : user ? (
               <div className="input-row">
-                <input
-                  value={name}
-                  onChange={(e) =>
-                    setName(e.target.value.toUpperCase().slice(0, 10))
-                  }
-                  placeholder="TUS INICIALES"
-                />
-                <button className="btn yellow" onClick={handleSaveScore}>
-                  GUARDAR PUNTUACIÓN
-                </button>
+                {saveError ? (
+                  <>
+                    <div
+                      className="mono"
+                      style={{
+                        color: "var(--magenta)",
+                        fontSize: 11,
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      {saveError}
+                    </div>
+                    <button
+                      className="btn yellow"
+                      onClick={handleSaveScore}
+                      disabled={saving}
+                    >
+                      REINTENTAR
+                    </button>
+                  </>
+                ) : (
+                  <div
+                    className="mono"
+                    style={{ color: "var(--ink-dim)", fontSize: 11 }}
+                  >
+                    GUARDANDO PUNTUACIÓN...
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+              <div className="input-row">
+                <button
+                  className="btn yellow"
+                  onClick={() => router.push("/auth")}
+                >
+                  INICIA SESIÓN PARA GUARDAR TU PUNTUACIÓN
+                </button>
+              </div>
             )}
             <div className="actions">
               <button className="btn" onClick={restart}>

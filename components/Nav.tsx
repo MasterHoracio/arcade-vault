@@ -1,30 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-
-interface AvUser {
-  name: string;
-}
+import { useSession } from "@/components/SessionProvider";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
+  const supabase = createClient();
+  const { user } = useSession();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<AvUser | null>(null);
 
-  useEffect(() => {
-    // Sync from localStorage (external system) on every navigation, since
-    // sign-in/out can happen on other pages without remounting Nav.
-    try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUser(JSON.parse(localStorage.getItem("av_user") || "null"));
-    } catch {
-      setUser(null);
-    }
-  }, [pathname]);
-
-  const isActive = (name: "inicio" | "biblioteca" | "salon" | "acerca-de" | "auth") => {
+  const isActive = (
+    name: "inicio" | "biblioteca" | "salon" | "acerca-de" | "auth",
+  ) => {
     if (name === "inicio") return pathname === "/";
     if (name === "biblioteca") return pathname.startsWith("/juegos");
     if (name === "salon") return pathname === "/salon";
@@ -37,9 +27,8 @@ export default function Nav() {
     router.push(href);
   };
 
-  const handleSignOut = () => {
-    localStorage.removeItem("av_user");
-    setUser(null);
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -52,16 +41,28 @@ export default function Nav() {
           </div>
         </div>
         <div className="links">
-          <a className={isActive("inicio") ? "active" : ""} onClick={() => go("/")}>
+          <a
+            className={isActive("inicio") ? "active" : ""}
+            onClick={() => go("/")}
+          >
             Inicio
           </a>
-          <a className={isActive("biblioteca") ? "active" : ""} onClick={() => go("/juegos")}>
+          <a
+            className={isActive("biblioteca") ? "active" : ""}
+            onClick={() => go("/juegos")}
+          >
             Biblioteca
           </a>
-          <a className={isActive("salon") ? "active" : ""} onClick={() => go("/salon")}>
+          <a
+            className={isActive("salon") ? "active" : ""}
+            onClick={() => go("/salon")}
+          >
             Salón de la Fama
           </a>
-          <a className={isActive("acerca-de") ? "active" : ""} onClick={() => go("/acerca-de")}>
+          <a
+            className={isActive("acerca-de") ? "active" : ""}
+            onClick={() => go("/acerca-de")}
+          >
             Acerca de
           </a>
         </div>
@@ -71,41 +72,82 @@ export default function Nav() {
           <span>CRÉDITOS · 03</span>
         </div>
         {user ? (
-          <button className="btn ghost auth-btn" onClick={handleSignOut}>
-            {user.name} ▾
-          </button>
+          <>
+            <div
+              className="player-chip"
+              title={user.nickname ?? user.email ?? ""}
+            >
+              <span className="tag">P1</span>
+              <span className="name">{user.nickname ?? user.email}</span>
+            </div>
+            <button className="btn ghost auth-btn" onClick={handleSignOut}>
+              Cerrar Sesión
+            </button>
+          </>
         ) : (
           <button className="btn auth-btn" onClick={() => go("/auth")}>
             Iniciar Sesión
           </button>
         )}
-        <button className="btn ghost hamburger" onClick={() => setOpen(true)} aria-label="Menú">
+        <button
+          className="btn ghost hamburger"
+          onClick={() => setOpen(true)}
+          aria-label="Menú"
+        >
           ≡
         </button>
       </nav>
 
-      <div className={"av-mobile-backdrop" + (open ? " open" : "")} onClick={() => setOpen(false)}></div>
+      <div
+        className={"av-mobile-backdrop" + (open ? " open" : "")}
+        onClick={() => setOpen(false)}
+      ></div>
       <aside className={"av-mobile-panel" + (open ? " open" : "")}>
-        <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>
+        <div
+          className="pixel neon-cyan"
+          style={{ fontSize: 11, marginBottom: 16 }}
+        >
           MENÚ
         </div>
-        <a className={isActive("inicio") ? "active" : ""} onClick={() => go("/")}>
+        <a
+          className={isActive("inicio") ? "active" : ""}
+          onClick={() => go("/")}
+        >
           Inicio
         </a>
-        <a className={isActive("biblioteca") ? "active" : ""} onClick={() => go("/juegos")}>
+        <a
+          className={isActive("biblioteca") ? "active" : ""}
+          onClick={() => go("/juegos")}
+        >
           Biblioteca
         </a>
-        <a className={isActive("salon") ? "active" : ""} onClick={() => go("/salon")}>
+        <a
+          className={isActive("salon") ? "active" : ""}
+          onClick={() => go("/salon")}
+        >
           Salón de la Fama
         </a>
-        <a className={isActive("acerca-de") ? "active" : ""} onClick={() => go("/acerca-de")}>
+        <a
+          className={isActive("acerca-de") ? "active" : ""}
+          onClick={() => go("/acerca-de")}
+        >
           Acerca de
         </a>
-        <a className={isActive("auth") ? "active" : ""} onClick={() => go("/auth")}>
+        <a
+          className={isActive("auth") ? "active" : ""}
+          onClick={() => go("/auth")}
+        >
           {user ? "Cuenta" : "Iniciar Sesión"}
         </a>
         <div style={{ flex: 1 }}></div>
-        <div className="pixel" style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}>
+        <div
+          className="pixel"
+          style={{
+            fontSize: 9,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.16em",
+          }}
+        >
           CRÉDITOS · 03
         </div>
       </aside>

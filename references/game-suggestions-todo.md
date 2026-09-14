@@ -8,6 +8,10 @@ El agente lee este archivo antes de proponer y lo actualiza después. Puedes edi
 
 - [x] **Arkanoid** (`arkanoid`, ARCADE) — spec 08.
 - [x] **Asteroides** (`asteroides`, SHOOTER) — spec 05.
+- [x] **Frogger** (`frogger`, ARCADE) — `specs/game-jam/frogger/01-frogger-core.md`.
+      No pasó por `game-planner`/`/spec-juego`: salió del agente `game-jam` y se
+      implementó directo desde ahí (rama `spec-01-frogger-core`), sin spec numerada en
+      `specs/`. Por eso no estaba en esta lista.
 - [x] **Serpentina** (`serpentina`, ARCADE) — spec 09.
 - [x] **Tetris** (`tetris`, PUZZLE) — spec 07.
 
@@ -235,3 +239,5 @@ El agente lee este archivo antes de proponer y lo actualiza después. Puedes edi
   - Por qué: mismo problema de balance que Glotón (ARCADE ya cubierto por dos
     juegos); patrones de tráfico en carriles con timer añaden más estado que el
     duelo de paletas, sin ganar diversidad de categoría.
+  - Nota (2026-09-07): el hueco lo cubrió **Frogger**, con la misma mecánica de
+    cruzar carriles de tráfico — no la vuelvas a proponer como novedad.

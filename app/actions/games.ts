@@ -21,11 +21,31 @@ export async function registerPlay(gameId: string): Promise<void> {
 
 export async function saveScore(params: {
   gameId: string;
-  playerName: string;
   score: number;
 }): Promise<void> {
   const supabase = await createClient();
-  await insertScore(supabase, params);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("Debes iniciar sesión para guardar tu puntuación.");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("nickname")
+    .eq("id", user.id)
+    .single();
+  if (profileError || !profile) {
+    throw new Error("No se encontró tu perfil.");
+  }
+
+  await insertScore(supabase, {
+    gameId: params.gameId,
+    userId: user.id,
+    playerName: profile.nickname,
+    score: params.score,
+  });
   revalidateGamePaths(params.gameId);
   revalidatePath("/salon");
 }

@@ -47,10 +47,16 @@ export async function getTopScores(
 
 export async function insertScore(
   supabase: SupabaseClient,
-  params: { gameId: string; playerName: string; score: number },
+  params: {
+    gameId: string;
+    userId: string;
+    playerName: string;
+    score: number;
+  },
 ): Promise<void> {
   const { error } = await supabase.from("scores").insert({
     game_id: params.gameId,
+    user_id: params.userId,
     player_name: params.playerName,
     score: params.score,
   });
