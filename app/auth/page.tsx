@@ -6,6 +6,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 const NICKNAME_PATTERN = /^[A-Z0-9_]{3,10}$/;
+const PASSWORD_PATTERN =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]).{8,}$/;
 
 export default function AuthPage() {
   const router = useRouter();
@@ -31,6 +33,12 @@ export default function AuthPage() {
       const nick = nickname.trim().toUpperCase();
       if (!NICKNAME_PATTERN.test(nick)) {
         setError("EL APODO DEBE TENER 3-10 CARACTERES: A-Z, 0-9 O _");
+        return;
+      }
+      if (!PASSWORD_PATTERN.test(password)) {
+        setError(
+          "LA CONTRASEÑA DEBE TENER MÍNIMO 8 CARACTERES, UNA MAYÚSCULA, UNA MINÚSCULA, UN DÍGITO Y UN SÍMBOLO",
+        );
         return;
       }
       setLoading(true);
